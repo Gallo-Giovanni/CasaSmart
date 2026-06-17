@@ -1,0 +1,1896 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SalvaSpreco</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0f0f0f; --surface: #1a1a1a; --surface2: #242424; --border: #2e2e2e;
+    --text: #ffffff; --text-muted: #888888; --accent: #6C63FF; --accent-hover: #5a52e0; --accent-light: rgba(108,99,255,0.15);
+    --red: #E24B4A; --red-bg: #2a1515; --red-border: #5a2020;
+    --orange: #D85A30; --orange-bg: #2a1a10; --orange-border: #5a3015;
+    --amber: #BA7517; --amber-bg: #251e0a; --amber-border: #4a3a10;
+    --green: #1D9E75; --green-bg: #0a2018; --green-border: #1a4030;
+  }
+  body.tema-chiaro {
+    --bg: #f2f2f7; --surface: #ffffff; --surface2: #f0f0f5; --border: #d0d0d8;
+    --text: #1a1a1a; --text-muted: #555555; --accent: #5046d4; --accent-hover: #3d35b8; --accent-light: rgba(80,70,212,0.12);
+    --red: #c0392b; --red-bg: #ff4444; --red-border: #cc0000;
+    --orange: #bf4515; --orange-bg: #ffb366; --orange-border: #cc6600;
+    --amber: #9a6000; --amber-bg: #ffd94d; --amber-border: #cc9900;
+    --green: #0e7a55; --green-bg: #66cc99; --green-border: #009955;
+  }
+  body.tema-chiaro .storico-nome { color: #333; }
+  body.tema-chiaro input[type="date"]::-webkit-calendar-picker-indicator { filter: none; }
+
+  /* pill tema chiaro */
+  body.tema-chiaro .pill-ok   { background: #66cc99; color: #004d22; border-color: #009955; }
+  body.tema-chiaro .pill-7    { background: #ffd94d; color: #2a1c00; border-color: #cc9900; }
+  body.tema-chiaro .pill-3    { background: #ffb366; color: #3d1500; border-color: #cc6600; }
+  body.tema-chiaro .pill-scad { background: #ff4444; color: #fff; border-color: #cc0000; }
+  body.tema-chiaro .pill-cat  { background: #e4e4ee; color: #333; border-color: #b0b0c0; }
+  body.tema-chiaro .pill-qty  { background: rgba(80,70,212,0.12); color: #3328a0; border-color: rgba(80,70,212,0.4); }
+  body.tema-chiaro .pill-pref { background: #ffd94d; color: #2a1c00; border-color: #cc9900; }
+  body.tema-chiaro .pill-rimosso { background: #e4e4ee; color: #444; border-color: #b0b0c0; }
+  body.tema-chiaro .pill-ritardo.ok   { background: #66cc99; color: #004d22; border-color: #009955; }
+  body.tema-chiaro .pill-ritardo.warn { background: #ffd94d; color: #2a1c00; border-color: #cc9900; }
+  body.tema-chiaro .pill-ritardo.bad  { background: #ff4444; color: #fff; border-color: #cc0000; }
+
+  /* card scadute tema chiaro */
+  body.tema-chiaro .prod-card.scaduto  { background: #ff6666; border-color: #cc0000; }
+  body.tema-chiaro .prod-card.urgente3 { background: #ffcc88; border-color: #cc6600; }
+  body.tema-chiaro .prod-card.urgente7 { background: #ffee66; border-color: #cc9900; }
+  body.tema-chiaro .prod-card.scaduto  .prod-nome { color: #660000; }
+  body.tema-chiaro .prod-card.urgente3 .prod-nome { color: #3d1500; }
+  body.tema-chiaro .prod-card.urgente7 .prod-nome { color: #2a1c00; }
+  body.tema-chiaro .prod-card.scaduto  .prod-data  { color: #fff; }
+  body.tema-chiaro .prod-card.urgente3 .prod-data  { color: #3d1500; }
+  body.tema-chiaro .prod-card.urgente7 .prod-data  { color: #2a1c00; }
+
+  /* stat tema chiaro */
+  body.tema-chiaro .s-scad { background: #ff4444; border-color: #cc0000; }
+  body.tema-chiaro .s-scad .stat-label { color: #fff; }
+  body.tema-chiaro .s-scad .stat-num   { color: #fff; }
+  body.tema-chiaro .s-3gg  { background: #ffb366; border-color: #cc6600; }
+  body.tema-chiaro .s-3gg  .stat-label { color: #3d1500; }
+  body.tema-chiaro .s-3gg  .stat-num   { color: #1a0800; }
+  body.tema-chiaro .s-7gg  { background: #ffd94d; border-color: #cc9900; }
+  body.tema-chiaro .s-7gg  .stat-label { color: #2a1c00; }
+  body.tema-chiaro .s-7gg  .stat-num   { color: #1a0e00; }
+  body.tema-chiaro .s-ok   { background: #66cc99; border-color: #009955; }
+  body.tema-chiaro .s-ok   .stat-label { color: #004d22; }
+  body.tema-chiaro .s-ok   .stat-num   { color: #003318; }
+
+  /* notifica banner tema chiaro */
+  body.tema-chiaro .notif-row.scaduti { background: #ff6666; border-color: #cc0000; }
+  body.tema-chiaro .notif-row.urgenti { background: #ffd94d; border-color: #cc9900; }
+  body.tema-chiaro .notif-row.scaduti .notif-testo { color: #660000; }
+  body.tema-chiaro .notif-row.urgenti .notif-testo { color: #2a1c00; }
+  body.tema-chiaro .notif-row.scaduti i { color: #c0392b; }
+  body.tema-chiaro .notif-row.urgenti i { color: #9a6000; }
+
+  /* dot tema chiaro */
+  body.tema-chiaro .dot-ok   { background: #0e7a55; }
+  body.tema-chiaro .dot-7    { background: #9a6000; }
+  body.tema-chiaro .dot-3    { background: #bf4515; }
+  body.tema-chiaro .dot-scad { background: #c0392b; }
+
+  /* sett badge tema chiaro */
+  body.tema-chiaro .sett-badge.on  { background: #66cc99; color: #004d22; border-color: #009955; }
+  body.tema-chiaro .sett-badge.off { background: #e4e4ee; color: #555; border-color: #b0b0c0; }
+
+  /* chip categoria tema chiaro */
+  body.tema-chiaro .chip-cat.on { background: #e4e4ee; color: #222; border-color: #999; }
+
+  /* modal conferma tema chiaro */
+  body.tema-chiaro .btn-confirm-storico { background: #ffd94d; color: #1a0e00; border-color: #cc9900; }
+  body.tema-chiaro .btn-confirm-storico:hover { background: #f5c800; }
+  body.tema-chiaro .btn-confirm-elimina { background: #ff4444; color: #ffffff; border-color: #cc0000; }
+  body.tema-chiaro .btn-confirm-elimina:hover { background: #dd2222; }
+  body.tema-chiaro .btn-confirm-cancel { background: #f0f0f0; color: #333; border-color: #ccc; }
+  body.tema-chiaro .btn-ripristina { background: #009955; color: #ffffff; border-color: #007740; }
+  body.tema-chiaro .btn-ripristina:hover { background: #007740; }
+  body.tema-chiaro .modal-confirm-sub { color: #555; }
+
+  /* select option tema chiaro */
+  body.tema-chiaro select option { background: #ffffff; color: #1a1a1a; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* ── AUTH ── */
+  #auth-screen { min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 3rem 1.5rem 2rem; max-width: 420px; margin: 0 auto; }
+  .auth-logo { font-size: 28px; font-weight: 600; margin-bottom: 6px; display: flex; align-items: center; gap: 10px; }
+  .auth-logo i { font-size: 30px; color: var(--accent); }
+  .auth-tagline { font-size: 14px; color: var(--text-muted); margin-bottom: 2rem; }
+  .features-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; margin-bottom: 2rem; }
+  .feature-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 1rem; text-align: center; }
+  .feature-card i { font-size: 26px; color: var(--accent); display: block; margin-bottom: 8px; }
+  .feature-card .fc-title { font-size: 14px; font-weight: 500; margin-bottom: 4px; }
+  .feature-card .fc-desc { font-size: 12px; color: var(--text-muted); line-height: 1.4; }
+  .info-card { width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 1rem 1.25rem; margin-bottom: 1.25rem; display: flex; align-items: flex-start; gap: 14px; }
+  .info-card-icon { font-size: 26px; flex-shrink: 0; margin-top: 2px; }
+  .info-card-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .info-card-desc { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
+  .auth-card { width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; }
+  .auth-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 1.5rem; }
+  .auth-tab { padding: 10px; border-radius: 10px; border: 1px solid var(--border); background: transparent; color: var(--text-muted); font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500; cursor: pointer; transition: all 0.15s; }
+  .auth-tab.active { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+  .auth-field { margin-bottom: 1rem; }
+  .auth-field label { display: block; font-size: 13px; color: var(--text-muted); margin-bottom: 6px; }
+  .auth-field input { width: 100%; height: 46px; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 0 14px; font-size: 15px; font-family: 'DM Sans', sans-serif; color: var(--text); outline: none; transition: border-color 0.15s; }
+  .auth-field input:focus { border-color: var(--accent); }
+  .auth-field input::placeholder { color: #555; }
+  .btn-auth { width: 100%; height: 48px; background: var(--accent); color: #fff; border: none; border-radius: 10px; font-size: 16px; font-weight: 500; font-family: 'DM Sans', sans-serif; cursor: pointer; margin-top: 0.5rem; transition: background 0.15s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .btn-auth:hover { background: var(--accent-hover); }
+  .btn-auth:active { transform: scale(0.98); }
+  .auth-msg { font-size: 13px; text-align: center; margin-top: 12px; min-height: 18px; border-radius: 8px; padding: 6px 10px; }
+  .auth-msg.error { background: var(--red-bg); color: #f09595; border: 1px solid var(--red-border); }
+  .auth-msg.success { background: var(--green-bg); color: #5DCAA5; border: 1px solid var(--green-border); }
+
+  /* ── APP ── */
+  #app-screen { display: none; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); background: var(--surface); }
+  .topbar-left { display: flex; flex-direction: column; gap: 2px; }
+  .topbar-title { font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  .topbar-title i { color: var(--accent); }
+  .topbar-user { font-size: 12px; color: var(--text-muted); }
+  .btn-logout { background: var(--surface2); border: 1px solid var(--border); color: var(--text-muted); border-radius: 8px; padding: 6px 12px; font-size: 13px; font-family: 'DM Sans', sans-serif; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+  .btn-logout:hover { color: var(--text); border-color: #555; }
+  .nav-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); background: var(--surface); }
+  .nav-tab { flex: 1; padding: 12px; text-align: center; font-size: 14px; font-weight: 500; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.15s; font-family: 'DM Sans', sans-serif; background: none; border-top: none; border-left: none; border-right: none; }
+  .nav-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .nav-tab i { display: block; font-size: 18px; margin-bottom: 2px; }
+  .main { padding: 1.25rem; max-width: 720px; margin: 0 auto; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* form */
+  .form-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 1.25rem; margin-bottom: 1.25rem; }
+  .form-card label { font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 5px; font-weight: 500; }
+  .form-card input[type="text"], .form-card input[type="date"], .form-card input[type="number"], .form-card select {
+    width: 100%; height: 40px; background: var(--surface2); border: 1px solid var(--border); border-radius: 9px; padding: 0 12px; font-size: 14px; font-family: 'DM Sans', sans-serif; color: var(--text); outline: none; transition: border-color 0.15s;
+  }
+  .form-card input:focus, .form-card select:focus { border-color: var(--accent); }
+  .form-card input::placeholder { color: #555; }
+  .form-card select option { background: var(--surface2); color: var(--text); }
+  .form-card input[type="number"]::-webkit-inner-spin-button,
+  .form-card input[type="number"]::-webkit-outer-spin-button { opacity: 0.4; }
+  .form-row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+  .form-row-2 { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; margin-top: 10px; }
+  .form-field { flex: 1; min-width: 100px; }
+  .btn-add { background: var(--accent); color: #fff; border: none; border-radius: 9px; height: 40px; padding: 0 18px; font-size: 14px; font-weight: 500; font-family: 'DM Sans', sans-serif; cursor: pointer; white-space: nowrap; flex-shrink: 0; display: flex; align-items: center; gap: 6px; }
+  .btn-add:hover { background: var(--accent-hover); }
+  .btn-add:active { transform: scale(0.98); }
+
+  /* stats */
+  .stats-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-bottom: 1.25rem; }
+  .stat { border-radius: 10px; padding: 10px 12px; border: 1px solid transparent; }
+  .stat-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 500; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .stat-num { font-size: 24px; font-weight: 600; font-family: 'DM Mono', monospace; }
+  .s-scad { background: var(--red-bg);    border-color: var(--red-border);    } .s-scad .stat-label { color: #f09595; } .s-scad .stat-num { color: #f7c1c1; }
+  .s-3gg  { background: var(--orange-bg); border-color: var(--orange-border); } .s-3gg .stat-label  { color: #F0997B; } .s-3gg .stat-num  { color: #F5C4B3; }
+  .s-7gg  { background: var(--amber-bg);  border-color: var(--amber-border);  } .s-7gg .stat-label  { color: #EF9F27; } .s-7gg .stat-num  { color: #FAC775; }
+  .s-ok   { background: var(--green-bg);  border-color: var(--green-border);  } .s-ok .stat-label   { color: #5DCAA5; } .s-ok .stat-num   { color: #9FE1CB; }
+
+  /* chips */
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 1.25rem; }
+  .chip { font-size: 12px; padding: 5px 14px; border-radius: 99px; border: 1px solid var(--border); background: transparent; color: var(--text-muted); cursor: pointer; font-family: 'DM Sans', sans-serif; font-weight: 500; transition: all 0.15s; }
+  .chip.on { background: var(--accent-light); color: var(--accent); border-color: var(--accent); }
+  .chip:hover { border-color: #555; color: var(--text); }
+  .chip-cat { font-size: 12px; padding: 5px 12px; border-radius: 99px; border: 1px solid var(--border); background: transparent; color: var(--text-muted); cursor: pointer; font-family: 'DM Sans', sans-serif; font-weight: 500; transition: all 0.15s; }
+  .chip-cat.on { background: var(--surface2); color: var(--text); border-color: #555; }
+  .chip-cat:hover { border-color: #555; color: var(--text); }
+
+  /* prod cards */
+  .prod-card { display: flex; align-items: center; gap: 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; margin-bottom: 8px; }
+  .prod-card.scaduto  { background: var(--red-bg);    border-color: var(--red-border); }
+  .prod-card.urgente3 { background: var(--orange-bg); border-color: var(--orange-border); }
+  .prod-card.urgente7 { background: var(--amber-bg);  border-color: var(--amber-border); }
+  .dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+  .dot-ok { background: #1D9E75; } .dot-7 { background: #EF9F27; } .dot-3 { background: #D85A30; } .dot-scad { background: var(--red); }
+  .prod-nome { font-size: 15px; font-weight: 500; margin-bottom: 4px; }
+  .prod-card.scaduto  .prod-nome { color: #f7c1c1; }
+  .prod-card.urgente3 .prod-nome { color: #F5C4B3; }
+  .prod-card.urgente7 .prod-nome { color: #FAC775; }
+  .prod-meta { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  .pill { font-size: 11px; padding: 2px 9px; border-radius: 99px; font-weight: 500; display: inline-flex; align-items: center; gap: 4px; }
+  .pill-ok   { background: var(--green-bg);  color: #5DCAA5; border: 1px solid var(--green-border); }
+  .pill-7    { background: var(--amber-bg);  color: #FAC775; border: 1px solid var(--amber-border); }
+  .pill-3    { background: var(--orange-bg); color: #F5C4B3; border: 1px solid var(--orange-border); }
+  .pill-scad { background: var(--red-bg);    color: #f7c1c1; border: 1px solid var(--red-border); }
+  .pill-cat  { background: var(--surface2);  color: var(--text-muted); border: 1px solid var(--border); }
+  .pill-pref { background: var(--amber-bg);  color: #EF9F27; border: 1px solid var(--amber-border); font-size:10px; }
+  body.tema-chiaro .pill-pref { background: #fef9e7; color: #7a4d00; border-color: #d4b830; }
+  .pill-qty  { background: var(--accent-light); color: var(--accent); border: 1px solid rgba(108,99,255,0.3); }
+  .prod-data { font-size: 12px; color: var(--text-muted); font-family: 'DM Mono', monospace; }
+  .prod-card.scaduto  .prod-data { color: #f09595; }
+  .prod-card.urgente3 .prod-data { color: #F0997B; }
+  .prod-card.urgente7 .prod-data { color: #EF9F27; }
+  .card-actions { display: flex; gap: 6px; margin-left: auto; flex-shrink: 0; }
+  .del-btn { background: none; border: none; cursor: pointer; color: #444; padding: 6px; border-radius: 8px; display: flex; align-items: center; font-size: 16px; transition: all 0.15s; }
+  .del-btn:hover { color: var(--red); background: var(--red-bg); }
+  .edit-btn { background: none; border: none; cursor: pointer; color: #444; padding: 6px; border-radius: 8px; display: flex; align-items: center; font-size: 16px; transition: all 0.15s; }
+  .edit-btn:hover { color: var(--accent); background: var(--accent-light); }
+
+  /* modal conferma */
+  .modal-confirm-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:10000; align-items:center; justify-content:center; padding:1.5rem; }
+  .modal-confirm-overlay.show { display:flex; }
+  .modal-confirm-box { background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:1.5rem; max-width:340px; width:100%; }
+  .modal-confirm-icon { font-size:32px; text-align:center; margin-bottom:10px; }
+  .modal-confirm-title { font-size:16px; font-weight:600; text-align:center; margin-bottom:6px; }
+  .modal-confirm-sub { font-size:13px; color:var(--text-muted); text-align:center; line-height:1.5; margin-bottom:1.25rem; }
+  .modal-confirm-btns { display:flex; flex-direction:column; gap:8px; }
+  .btn-confirm-storico { background:var(--amber-bg); color:#FAC775; border:1px solid var(--amber-border); border-radius:10px; padding:12px; font-size:14px; font-weight:500; font-family:'DM Sans',sans-serif; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; }
+  .btn-confirm-storico:hover { background:#3a2e0f; }
+  .btn-confirm-elimina { background:var(--red-bg); color:#f7c1c1; border:1px solid var(--red-border); border-radius:10px; padding:12px; font-size:14px; font-weight:500; font-family:'DM Sans',sans-serif; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; }
+  .btn-confirm-elimina:hover { background:#3d1515; }
+  .btn-confirm-cancel { background:transparent; color:var(--text-muted); border:1px solid var(--border); border-radius:10px; padding:12px; font-size:14px; font-family:'DM Sans',sans-serif; cursor:pointer; }
+  .btn-confirm-cancel:hover { color:var(--text); }
+
+  /* modal edit */
+  .modal-edit-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:9999; align-items:center; justify-content:center; padding:1.5rem; }
+  .modal-edit-overlay.show { display:flex; }
+  .modal-edit-box { background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:1.5rem; max-width:420px; width:100%; }
+  .modal-edit-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.25rem; }
+  .modal-edit-title { font-size:17px; font-weight:600; }
+  .modal-edit-close { background:none; border:none; cursor:pointer; color:var(--text-muted); font-size:20px; padding:4px; border-radius:8px; }
+  .modal-edit-close:hover { color:var(--text); }
+  .modal-edit-field { margin-bottom:1rem; }
+  .modal-edit-field label { font-size:11px; letter-spacing:0.05em; text-transform:uppercase; color:var(--text-muted); display:block; margin-bottom:5px; font-weight:500; }
+  .modal-edit-field input, .modal-edit-field select {
+    width:100%; height:42px; background:var(--surface2); border:1px solid var(--border); border-radius:10px;
+    padding:0 12px; font-size:14px; font-family:'DM Sans',sans-serif; color:var(--text); outline:none; transition:border-color 0.15s;
+  }
+  .modal-edit-field input:focus, .modal-edit-field select:focus { border-color:var(--accent); }
+  .modal-edit-field select option { background:var(--surface2); }
+  .modal-edit-row2 { display:flex; gap:10px; }
+  .modal-edit-row2 .modal-edit-field { flex:1; }
+  .modal-edit-field input[type="number"]::-webkit-inner-spin-button { opacity:0.4; }
+  .btn-salva { width:100%; height:46px; background:var(--accent); color:#fff; border:none; border-radius:10px; font-size:15px; font-weight:500; font-family:'DM Sans',sans-serif; cursor:pointer; margin-top:0.25rem; transition:background 0.15s; }
+  .btn-salva:hover { background:var(--accent-hover); }
+  .btn-salva:active { transform:scale(0.98); }
+  .modal-edit-msg { font-size:13px; text-align:center; margin-top:10px; min-height:16px; color:#5DCAA5; }
+
+  /* modal changelog */
+  .changelog-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:10000; align-items:center; justify-content:center; padding:1.5rem; }
+  .changelog-overlay.show { display:flex; }
+  .changelog-box { background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:1.5rem; max-width:400px; width:100%; max-height:80vh; display:flex; flex-direction:column; }
+  .changelog-header { display:flex; align-items:center; gap:10px; margin-bottom:1.25rem; }
+  .changelog-icon { font-size:24px; color:var(--accent); }
+  .changelog-header-text { flex:1; }
+  .changelog-title { font-size:17px; font-weight:600; }
+  .changelog-sub { font-size:12px; color:var(--text-muted); margin-top:2px; }
+  .changelog-scroll { overflow-y:auto; flex:1; margin-bottom:1.25rem; }
+  .changelog-version { margin-bottom:1.25rem; }
+  .changelog-version:last-child { margin-bottom:0; }
+  .changelog-v-header { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+  .changelog-v-badge { font-size:11px; font-weight:600; background:var(--accent-light); color:var(--accent); border:1px solid rgba(108,99,255,0.3); padding:2px 10px; border-radius:99px; }
+  .changelog-v-date { font-size:11px; color:var(--text-muted); }
+  .changelog-item { display:flex; gap:10px; padding:8px 0; border-bottom:1px solid var(--border); }
+  .changelog-item:last-child { border-bottom:none; }
+  .changelog-item-icon { font-size:16px; flex-shrink:0; margin-top:1px; }
+  .changelog-item-text { flex:1; }
+  .changelog-item-title { font-size:13px; font-weight:500; margin-bottom:2px; }
+  .changelog-item-desc { font-size:12px; color:var(--text-muted); line-height:1.4; }
+  .btn-changelog-close { width:100%; height:46px; background:var(--accent); color:#fff; border:none; border-radius:10px; font-size:15px; font-weight:500; font-family:'DM Sans',sans-serif; cursor:pointer; flex-shrink:0; }
+  .btn-changelog-close:hover { background:var(--accent-hover); }
+
+  /* modal quantità eliminazione */
+  .modal-qty-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:9999; align-items:center; justify-content:center; padding:1.5rem; }
+  .modal-qty-overlay.show { display:flex; }
+  .modal-qty-box { background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:1.5rem; max-width:320px; width:100%; }
+  .modal-qty-title { font-size:17px; font-weight:600; margin-bottom:6px; }
+  .modal-qty-sub { font-size:13px; color:var(--text-muted); margin-bottom:1.25rem; line-height:1.4; }
+  .qty-stepper { display:flex; align-items:center; justify-content:center; gap:16px; margin-bottom:1.25rem; }
+  .qty-btn { width:42px; height:42px; border-radius:99px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font-size:20px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.15s; }
+  .qty-btn:hover { border-color:var(--accent); color:var(--accent); }
+  .qty-val { font-size:28px; font-weight:600; font-family:'DM Mono',monospace; min-width:48px; text-align:center; }
+  .modal-qty-btns { display:flex; gap:8px; }
+  .modal-qty-btns button { flex:1; height:44px; border-radius:10px; font-size:14px; font-weight:500; font-family:'DM Sans',sans-serif; cursor:pointer; border:none; }
+  .btn-qty-confirm { background:var(--red); color:#fff; }
+  .btn-qty-confirm:hover { background:#c93b3a; }
+  .btn-qty-cancel { background:var(--surface2); color:var(--text-muted); border:1px solid var(--border) !important; }
+  .btn-qty-cancel:hover { color:var(--text); }
+
+  /* storico */
+  .section-title { font-size: 13px; font-weight: 500; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin: 1.5rem 0 0.75rem; }
+  .section-title:first-child { margin-top: 0; }
+  .storico-card { display: flex; align-items: center; gap: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 16px; margin-bottom: 8px; }
+  .storico-nome { font-size: 14px; font-weight: 500; margin-bottom: 3px; color: var(--text-muted); }
+  .storico-meta { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  .pill-rimosso { background: var(--surface2); color: var(--text-muted); border: 1px solid var(--border); font-size: 11px; padding: 2px 9px; border-radius: 99px; font-weight: 500; display: inline-flex; align-items: center; gap: 4px; }
+  .pill-ritardo { font-size: 11px; padding: 2px 9px; border-radius: 99px; font-weight: 500; }
+  .pill-ritardo.ok   { background: var(--green-bg); color: #5DCAA5; border: 1px solid var(--green-border); }
+  .pill-ritardo.warn { background: var(--amber-bg); color: #FAC775; border: 1px solid var(--amber-border); }
+  .pill-ritardo.bad  { background: var(--red-bg);   color: #f7c1c1; border: 1px solid var(--red-border); }
+  .top-card { display: flex; align-items: center; justify-content: space-between; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; margin-bottom: 6px; }
+  .top-nome { font-size: 14px; font-weight: 500; }
+  .top-count { font-size: 13px; color: var(--text-muted); font-family: 'DM Mono', monospace; }
+  .top-bar-wrap { margin-top: 4px; height: 3px; background: var(--surface2); border-radius: 99px; }
+  .top-bar { height: 3px; background: var(--accent); border-radius: 99px; }
+
+  /* storico sub-tabs */
+  .storico-subtabs { display:flex; gap:8px; margin-bottom:1.25rem; }
+  .storico-subtab { flex:1; padding:10px; border-radius:10px; border:1px solid var(--border); background:transparent; color:var(--text-muted); font-family:'DM Sans',sans-serif; font-size:14px; font-weight:500; cursor:pointer; transition:all 0.15s; }
+  .storico-subtab.active { background:var(--accent-light); color:var(--accent); border-color:var(--accent); }
+
+  /* card eliminati */
+  .eliminato-card { display:flex; align-items:center; gap:12px; background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:12px 16px; margin-bottom:8px; }
+  .eliminato-nome { font-size:14px; font-weight:500; margin-bottom:3px; }
+  .eliminato-meta { display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
+  .btn-ripristina { margin-left:auto; flex-shrink:0; background:var(--green-bg); border:1px solid var(--green-border); color:#5DCAA5; padding:6px 12px; border-radius:8px; font-size:12px; font-weight:500; font-family:'DM Sans',sans-serif; cursor:pointer; white-space:nowrap; transition:all 0.15s; display:flex; align-items:center; gap:5px; }
+  .btn-ripristina:hover { background:#1a4030; }
+
+  .empty { text-align: center; padding: 3rem 1rem; color: var(--text-muted); }
+  .empty i { font-size: 40px; display: block; margin-bottom: 12px; opacity: 0.4; }
+  .empty-txt { font-size: 14px; }
+  .loading { text-align: center; padding: 2rem; color: var(--text-muted); font-size: 14px; }
+  input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.6); }
+
+  /* ── NOTIFICHE ── */
+  #notifica-banner { display:none; margin-bottom:1.25rem; border-radius:14px; overflow:hidden; }
+  .notif-row { display:flex; align-items:flex-start; gap:12px; padding:12px 16px; }
+  .notif-row.scaduti { background:var(--red-bg); border:1px solid var(--red-border); border-radius:12px; margin-bottom:6px; }
+  .notif-row.urgenti { background:var(--orange-bg); border:1px solid var(--orange-border); border-radius:12px; margin-bottom:6px; }
+  .notif-row i { font-size:18px; flex-shrink:0; margin-top:1px; }
+  .notif-row.scaduti i { color:#f09595; }
+  .notif-row.urgenti i { color:#F0997B; }
+  .notif-testo { flex:1; font-size:13px; line-height:1.5; }
+  .notif-row.scaduti .notif-testo { color:#f7c1c1; }
+  .notif-row.urgenti .notif-testo { color:#F5C4B3; }
+  .notif-testo strong { font-weight:600; }
+  .notif-close { background:none; border:none; cursor:pointer; color:#555; font-size:16px; padding:2px; flex-shrink:0; }
+  .notif-close:hover { color:#888; }
+
+  /* toast web push */
+  /* toast web push — sostituito da modal */
+  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:9999; align-items:center; justify-content:center; padding:1.5rem; }
+  .modal-overlay.show { display:flex; }
+  .modal-box { background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:1.5rem; max-width:360px; width:100%; }
+  .modal-icon { font-size:36px; color:var(--accent); text-align:center; margin-bottom:1rem; }
+  .modal-title { font-size:18px; font-weight:600; text-align:center; margin-bottom:8px; }
+  .modal-desc { font-size:14px; color:var(--text-muted); text-align:center; line-height:1.5; margin-bottom:1.25rem; }
+  .modal-btns { display:flex; gap:8px; flex-direction:column; }
+  .modal-btn-yes { background:var(--accent); color:#fff; border:none; border-radius:10px; padding:12px; font-size:15px; font-family:'DM Sans',sans-serif; font-weight:500; cursor:pointer; }
+  .modal-btn-yes:hover { background:var(--accent-hover); }
+  .modal-btn-no { background:transparent; color:var(--text-muted); border:1px solid var(--border); border-radius:10px; padding:12px; font-size:15px; font-family:'DM Sans',sans-serif; cursor:pointer; }
+  .modal-btn-no:hover { color:var(--text); }
+
+  /* impostazioni */
+  .sett-section { margin-bottom:1.5rem; }
+  .sett-section-title { font-size:11px; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-muted); font-weight:500; margin-bottom:10px; }
+  .sett-row { display:flex; align-items:center; justify-content:space-between; gap:16px; background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:14px 16px; margin-bottom:8px; }
+  .sett-row-info { flex:1; }
+  .sett-row-title { font-size:15px; font-weight:500; margin-bottom:2px; }
+  .sett-row-desc { font-size:12px; color:var(--text-muted); line-height:1.4; }
+  .toggle { position:relative; width:46px; height:26px; flex-shrink:0; }
+  .toggle input { opacity:0; width:0; height:0; }
+  .toggle-slider { position:absolute; inset:0; background:var(--surface2); border:1px solid var(--border); border-radius:99px; cursor:pointer; transition:all 0.2s; }
+  .toggle-slider:before { content:''; position:absolute; width:18px; height:18px; left:3px; top:3px; background:#666; border-radius:50%; transition:all 0.2s; }
+  .toggle input:checked + .toggle-slider { background:var(--accent); border-color:var(--accent); }
+  .toggle input:checked + .toggle-slider:before { transform:translateX(20px); background:#fff; }
+  .sett-badge { font-size:11px; padding:2px 8px; border-radius:99px; font-weight:500; }
+  .sett-badge.on  { background:var(--green-bg); color:#5DCAA5; border:1px solid var(--green-border); }
+  .sett-badge.off { background:var(--surface2); color:var(--text-muted); border:1px solid var(--border); }
+  #push-toast i { font-size:22px; color:var(--accent); flex-shrink:0; margin-top:2px; }
+  .push-toast-title { font-size:14px; font-weight:600; margin-bottom:4px; display:none; }
+  .push-toast-desc { display:none; }
+  .push-toast-btns { display:none; }
+  .push-btn-yes { display:none; }
+  .push-btn-no { display:none; }
+</style>
+</head>
+<body>
+
+<!-- AUTH -->
+<div id="auth-screen">
+  <div class="auth-logo"><i class="ti ti-clock-check"></i> SalvaSpreco</div>
+  <div class="auth-tagline">Non sprecare più nulla in cucina</div>
+  <div class="features-grid">
+    <div class="feature-card"><i class="ti ti-calendar-exclamation"></i><div class="fc-title">Tieni traccia</div><div class="fc-desc">Aggiungi prodotti e la loro data di scadenza</div></div>
+    <div class="feature-card"><i class="ti ti-bell-ringing"></i><div class="fc-title">Avvisi visivi</div><div class="fc-desc">Scopri subito cosa sta per scadere</div></div>
+    <div class="feature-card"><i class="ti ti-chart-bar"></i><div class="fc-title">Analisi storico</div><div class="fc-desc">Scopri quali prodotti scadono più spesso</div></div>
+    <div class="feature-card"><i class="ti ti-clock-pause"></i><div class="fc-title">Storico 14 giorni</div><div class="fc-desc">I prodotti scaduti restano visibili per 14 giorni prima di essere archiviati</div></div>
+  </div>
+
+  <div class="info-card">
+    <div class="info-card-icon">🔗</div>
+    <div>
+      <div class="info-card-title">Account condiviso</div>
+      <div class="info-card-desc">Lo stesso account funziona su <strong style="color:var(--text);">ScontrinoSmart</strong> e <strong style="color:var(--text);">SalvaSpreco</strong></div>
+    </div>
+  </div>
+  <div class="auth-card">
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-login" onclick="switchTab('login')">Accedi</button>
+      <button class="auth-tab" id="tab-register" onclick="switchTab('register')">Registrati</button>
+    </div>
+    <div class="auth-field"><label>Email</label><input type="email" id="auth-email" placeholder="tua@email.com" /></div>
+    <div class="auth-field"><label>Password</label><input type="password" id="auth-password" placeholder="••••••••" /></div>
+    <button class="btn-auth" id="btn-auth-submit" onclick="handleAuth()">Accedi <i class="ti ti-arrow-right"></i></button>
+    <div class="auth-msg" id="auth-msg"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app-screen">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-title"><i class="ti ti-clock-check"></i> SalvaSpreco</div>
+      <div class="topbar-user" id="user-email-display"></div>
+    </div>
+    <button class="btn-logout" onclick="handleLogout()"><i class="ti ti-logout"></i> Esci</button>
+  </div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" data-tab="attivi" onclick="switchAppTab('attivi')"><i class="ti ti-basket"></i> Prodotti</button>
+    <button class="nav-tab" data-tab="storico" onclick="switchAppTab('storico')"><i class="ti ti-history"></i> Storico</button>
+    <button class="nav-tab" data-tab="impostazioni" onclick="switchAppTab('impostazioni')"><i class="ti ti-settings"></i> Impostazioni</button>
+  </div>
+
+  <div class="main">
+
+    <!-- TAB ATTIVI -->
+    <div class="tab-content active" id="tab-attivi">
+      <div id="notifica-banner"></div>
+
+      <div class="form-card">
+        <div class="form-row">
+          <div class="form-field" style="min-width:160px;">
+            <label>Nome prodotto</label>
+            <input type="text" id="inp-nome" placeholder="es. Latte, Mozzarella…" />
+          </div>
+          <div class="form-field" style="max-width:150px;">
+            <label>Scadenza</label>
+            <input type="date" id="inp-data" />
+          </div>
+          <div class="form-field" style="max-width:165px;">
+            <label>Categoria <span id="cat-ai-badge" style="display:none;font-size:10px;color:var(--accent);font-weight:500;letter-spacing:0;">✦ AI</span></label>
+            <select id="inp-cat">
+              <option value="Frutta e verdura">🥦 Frutta e verdura</option>
+              <option value="Carne">🥩 Carne</option>
+              <option value="Pesce">🐟 Pesce</option>
+              <option value="Salumi e affettati">🍗 Salumi e affettati</option>
+              <option value="Latticini e formaggi">🧀 Latticini e formaggi</option>
+              <option value="Uova">🥚 Uova</option>
+              <option value="Legumi e cereali">🫘 Legumi e cereali</option>
+              <option value="Pane e pasta">🍞 Pane e pasta</option>
+              <option value="Bibite">🥤 Bibite</option>
+              <option value="Birre e alcolici">🍺 Birre e alcolici</option>
+              <option value="Salse e condimenti">🫙 Salse e condimenti</option>
+              <option value="Dolci e snack">🍫 Dolci e snack</option>
+              <option value="Frutta secca">🥜 Frutta secca</option>
+              <option value="Farmaci">💊 Farmaci</option>
+              <option value="Altro">📦 Altro</option>
+            </select>
+          </div>
+          <div class="form-field" style="max-width:175px;">
+            <label>Tipo scadenza</label>
+            <select id="inp-tipo">
+              <option value="entro">⛔ Entro il</option>
+              <option value="preferibilmente">💛 Preferibilmente entro</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row-2">
+          <div class="form-field" style="max-width:110px;">
+            <label>N° pezzi (opz.)</label>
+            <input type="number" id="inp-qty" placeholder="es. 3" min="1" max="999" />
+          </div>
+          <div class="form-field" style="max-width:110px;">
+            <label>Quantità (opz.)</label>
+            <input type="number" id="inp-qprod" placeholder="es. 500" min="0" step="any" />
+          </div>
+          <div class="form-field" style="max-width:110px;">
+            <label>Unità (opz.)</label>
+            <select id="inp-um">
+              <option value="">—</option>
+              <option value="gr">gr</option>
+              <option value="kg">kg</option>
+              <option value="lt">lt</option>
+              <option value="ml">ml</option>
+              <option value="pz">pz</option>
+            </select>
+          </div>
+          <div style="flex:1;"></div>
+          <button class="btn-add" onclick="aggiungi()"><i class="ti ti-plus"></i> Aggiungi</button>
+        </div>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat s-scad"><div class="stat-label">Scaduti</div><div class="stat-num" id="s-scad">0</div></div>
+        <div class="stat s-3gg"><div class="stat-label">Scadenza 3gg</div><div class="stat-num" id="s-3gg">0</div></div>
+        <div class="stat s-7gg"><div class="stat-label">Scadenza 7gg</div><div class="stat-num" id="s-7gg">0</div></div>
+        <div class="stat s-ok"><div class="stat-label">Oltre 7gg</div><div class="stat-num" id="s-ok">0</div></div>
+      </div>
+
+      <div class="chips">
+        <button class="chip on" data-f="tutti" onclick="setFiltro('tutti')">Tutti</button>
+        <button class="chip" data-f="scaduti" onclick="setFiltro('scaduti')">Scaduti</button>
+        <button class="chip" data-f="3gg" onclick="setFiltro('3gg')">Entro 3 giorni</button>
+        <button class="chip" data-f="7gg" onclick="setFiltro('7gg')">Entro 7 giorni</button>
+        <button class="chip" data-f="ok" onclick="setFiltro('ok')">Oltre 7 giorni</button>
+      </div>
+      <div class="chips" id="chips-cat">
+        <button class="chip-cat on" data-c="tutti" onclick="setFiltroCat('tutti')">Tutte le categorie</button>
+        <button class="chip-cat" data-c="Frutta e verdura" onclick="setFiltroCat('Frutta e verdura')">🥦 Frutta e verdura</button>
+        <button class="chip-cat" data-c="Carne" onclick="setFiltroCat('Carne')">🥩 Carne</button>
+        <button class="chip-cat" data-c="Pesce" onclick="setFiltroCat('Pesce')">🐟 Pesce</button>
+        <button class="chip-cat" data-c="Salumi e affettati" onclick="setFiltroCat('Salumi e affettati')">🍗 Salumi</button>
+        <button class="chip-cat" data-c="Latticini e formaggi" onclick="setFiltroCat('Latticini e formaggi')">🧀 Latticini</button>
+        <button class="chip-cat" data-c="Uova" onclick="setFiltroCat('Uova')">🥚 Uova</button>
+        <button class="chip-cat" data-c="Legumi e cereali" onclick="setFiltroCat('Legumi e cereali')">🫘 Legumi</button>
+        <button class="chip-cat" data-c="Pane e pasta" onclick="setFiltroCat('Pane e pasta')">🍞 Pane e pasta</button>
+        <button class="chip-cat" data-c="Bibite" onclick="setFiltroCat('Bibite')">🥤 Bibite</button>
+        <button class="chip-cat" data-c="Birre e alcolici" onclick="setFiltroCat('Birre e alcolici')">🍺 Birre</button>
+        <button class="chip-cat" data-c="Salse e condimenti" onclick="setFiltroCat('Salse e condimenti')">🫙 Salse</button>
+        <button class="chip-cat" data-c="Dolci e snack" onclick="setFiltroCat('Dolci e snack')">🍫 Dolci</button>
+        <button class="chip-cat" data-c="Frutta secca" onclick="setFiltroCat('Frutta secca')">🥜 Frutta secca</button>
+        <button class="chip-cat" data-c="Farmaci" onclick="setFiltroCat('Farmaci')">💊 Farmaci</button>
+        <button class="chip-cat" data-c="Altro" onclick="setFiltroCat('Altro')">📦 Altro</button>
+      </div>
+
+      <div id="loading" class="loading"><i class="ti ti-loader" style="font-size:20px;"></i> Caricamento…</div>
+      <div id="lista"></div>
+      <div id="vuoto" class="empty" style="display:none;"><i class="ti ti-basket"></i><div class="empty-txt">Nessun prodotto — aggiungine uno!</div></div>
+    </div>
+
+    <!-- TAB STORICO -->
+    <div class="tab-content" id="tab-storico">
+      <div class="storico-subtabs">
+        <button class="storico-subtab active" data-s="scaduti" onclick="switchStoricoTab('scaduti')">Scaduti</button>
+        <button class="storico-subtab" data-s="eliminati" onclick="switchStoricoTab('eliminati')">Eliminati</button>
+      </div>
+
+      <!-- SCADUTI -->
+      <div id="storico-scaduti-pane">
+        <div id="storico-loading" class="loading"><i class="ti ti-loader" style="font-size:20px;"></i> Caricamento…</div>
+        <div id="storico-content" style="display:none;">
+          <div class="section-title">Prodotti più scaduti</div>
+          <div id="top-scaduti"></div>
+          <div class="section-title">Storico completo</div>
+          <div id="storico-lista"></div>
+          <div id="storico-vuoto" class="empty" style="display:none;"><i class="ti ti-history"></i><div class="empty-txt">Nessun prodotto nello storico ancora.</div></div>
+        </div>
+      </div>
+
+      <!-- ELIMINATI -->
+      <div id="storico-eliminati-pane" style="display:none;">
+        <div id="eliminati-loading" class="loading"><i class="ti ti-loader" style="font-size:20px;"></i> Caricamento…</div>
+        <div id="eliminati-content" style="display:none;">
+          <div id="eliminati-lista"></div>
+          <div id="eliminati-vuoto" class="empty" style="display:none;">
+            <i class="ti ti-trash"></i>
+            <div class="empty-txt">Nessun prodotto eliminato.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB IMPOSTAZIONI -->
+    <div class="tab-content" id="tab-impostazioni">
+      <div class="sett-section">
+        <div class="sett-section-title">Aspetto</div>
+        <div class="sett-row">
+          <div class="sett-row-info">
+            <div class="sett-row-title">Tema scuro</div>
+            <div class="sett-row-desc">Attiva il tema scuro. Di default l'app usa il tema chiaro.</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="toggle-tema" onchange="toggleTema(this.checked)">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="sett-section">
+        <div class="sett-section-title">Notifiche</div>
+        <div class="sett-row">
+          <div class="sett-row-info">
+            <div class="sett-row-title">Notifiche di sistema</div>
+            <div class="sett-row-desc">Ricevi un avviso quando apri l'app se hai prodotti scaduti o in scadenza entro 3 giorni.</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="toggle-push" onchange="togglePushSetting(this.checked)">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div id="push-status-row" class="sett-row" style="display:none;">
+          <div class="sett-row-info">
+            <div class="sett-row-title">Stato permesso browser</div>
+            <div class="sett-row-desc" id="push-status-desc">—</div>
+          </div>
+          <span class="sett-badge" id="push-status-badge">—</span>
+        </div>
+        <div class="sett-row" id="orario-row" style="display:none;">
+          <div class="sett-row-info">
+            <div class="sett-row-title">Orario notifica giornaliera</div>
+            <div class="sett-row-desc">Scegli a che ora ricevere il promemoria ogni giorno.</div>
+          </div>
+          <select id="sel-orario" onchange="salvaOrarioNotifica(this.value)" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:6px 10px;font-family:'DM Sans',sans-serif;font-size:14px;outline:none;cursor:pointer;">
+            <option value="06:00">06:00</option>
+            <option value="07:00">07:00</option>
+            <option value="08:00">08:00</option>
+            <option value="09:00">09:00</option>
+            <option value="10:00">10:00</option>
+            <option value="11:00">11:00</option>
+            <option value="12:00">12:00</option>
+            <option value="13:00">13:00</option>
+            <option value="14:00">14:00</option>
+            <option value="15:00">15:00</option>
+            <option value="16:00">16:00</option>
+            <option value="17:00">17:00</option>
+            <option value="18:00">18:00</option>
+            <option value="19:00">19:00</option>
+            <option value="20:00">20:00</option>
+            <option value="21:00">21:00</option>
+            <option value="22:00">22:00</option>
+          </select>
+        </div>
+        <div class="sett-row" id="stile-row" style="display:none;">
+          <div class="sett-row-info">
+            <div class="sett-row-title">Stile notifica</div>
+            <div class="sett-row-desc"><strong>Breve:</strong> mostra solo il numero di prodotti. <strong>Dettagliata:</strong> elenca anche i nomi dei prodotti.</div>
+          </div>
+          <select id="sel-stile" onchange="salvaPreferenzaNotifica('notifica_stile', this.value)" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:6px 10px;font-family:'DM Sans',sans-serif;font-size:14px;outline:none;cursor:pointer;">
+            <option value="breve">Breve</option>
+            <option value="dettagliata">Dettagliata</option>
+          </select>
+        </div>
+        <div class="sett-row" id="soglia-row" style="display:none;">
+          <div class="sett-row-info">
+            <div class="sett-row-title">Soglia preavviso</div>
+            <div class="sett-row-desc"><strong>Solo scaduti:</strong> avvisa solo per prodotti già scaduti. Oppure scegli quanti giorni prima essere avvisato.</div>
+          </div>
+          <select id="sel-soglia" onchange="salvaPreferenzaNotifica('notifica_soglia', parseInt(this.value))" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:6px 10px;font-family:'DM Sans',sans-serif;font-size:14px;outline:none;cursor:pointer;">
+            <option value="0">Solo scaduti</option>
+            <option value="1">1 giorno prima</option>
+            <option value="2">2 giorni prima</option>
+            <option value="3">3 giorni prima</option>
+            <option value="5">5 giorni prima</option>
+            <option value="7">7 giorni prima</option>
+            <option value="14">14 giorni prima</option>
+          </select>
+        </div>
+      </div>
+        <div class="sett-row">
+          <div class="sett-row-info">
+            <div class="sett-row-title">Email</div>
+            <div class="sett-row-desc" id="sett-email">—</div>
+          </div>
+        </div>
+        <div class="sett-row" style="cursor:pointer;" onclick="handleLogout()">
+          <div class="sett-row-info">
+            <div class="sett-row-title" style="color:#f09595;">Esci dall'account</div>
+            <div class="sett-row-desc">Disconnettiti da SalvaSpreco</div>
+          </div>
+          <i class="ti ti-logout" style="color:#f09595;font-size:18px;"></i>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL CONFERMA ELIMINAZIONE -->
+<div class="modal-confirm-overlay" id="confirm-modal">
+  <div class="modal-confirm-box">
+    <div class="modal-confirm-icon" id="confirm-icon">🗑️</div>
+    <div class="modal-confirm-title" id="confirm-title"></div>
+    <div class="modal-confirm-sub" id="confirm-sub"></div>
+    <div class="modal-confirm-btns" id="confirm-btns"></div>
+  </div>
+</div>
+
+<!-- MODAL CHANGELOG -->
+<div class="changelog-overlay" id="changelog-modal">
+  <div class="changelog-box">
+    <div class="changelog-header">
+      <div class="changelog-icon"><i class="ti ti-sparkles"></i></div>
+      <div class="changelog-header-text">
+        <div class="changelog-title">Novità in SalvaSpreco</div>
+        <div class="changelog-sub" id="changelog-sub-text"></div>
+      </div>
+    </div>
+    <div class="changelog-scroll" id="changelog-content"></div>
+    <button class="btn-changelog-close" onclick="chiudiChangelog()">Ho capito, grazie!</button>
+  </div>
+</div>
+
+<!-- MODAL QUANTITÀ ELIMINAZIONE -->
+<div class="modal-qty-overlay" id="qty-modal">
+  <div class="modal-qty-box">
+    <div class="modal-qty-title" id="qty-modal-title">Quanti elimini?</div>
+    <div class="modal-qty-sub" id="qty-modal-sub"></div>
+    <div class="qty-stepper">
+      <button class="qty-btn" onclick="cambiaQty(-1)"><i class="ti ti-minus"></i></button>
+      <div class="qty-val" id="qty-val">1</div>
+      <button class="qty-btn" onclick="cambiaQty(+1)"><i class="ti ti-plus"></i></button>
+    </div>
+    <div class="modal-qty-btns">
+      <button class="btn-qty-cancel" onclick="chiudiQtyModal()">Annulla</button>
+      <button class="btn-qty-confirm" onclick="confermEliminazione()" id="btn-qty-confirm">Elimina</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL EDIT PRODOTTO -->
+<div class="modal-edit-overlay" id="edit-modal">
+  <div class="modal-edit-box">
+    <div class="modal-edit-header">
+      <div class="modal-edit-title">Modifica prodotto</div>
+      <button class="modal-edit-close" onclick="chiudiEditModal()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-edit-field">
+      <label>Nome prodotto</label>
+      <input type="text" id="edit-nome" placeholder="es. Latte, Yogurt…" />
+    </div>
+    <div class="modal-edit-field">
+      <label>Data di scadenza</label>
+      <input type="date" id="edit-data" />
+    </div>
+    <div class="modal-edit-field">
+      <label>Categoria</label>
+      <select id="edit-cat">
+        <option value="Frutta e verdura">🥦 Frutta e verdura</option>
+        <option value="Carne">🥩 Carne</option>
+        <option value="Pesce">🐟 Pesce</option>
+        <option value="Salumi e affettati">🍗 Salumi e affettati</option>
+        <option value="Latticini e formaggi">🧀 Latticini e formaggi</option>
+        <option value="Uova">🥚 Uova</option>
+        <option value="Legumi e cereali">🫘 Legumi e cereali</option>
+        <option value="Pane e pasta">🍞 Pane e pasta</option>
+        <option value="Bibite">🥤 Bibite</option>
+        <option value="Birre e alcolici">🍺 Birre e alcolici</option>
+        <option value="Salse e condimenti">🫙 Salse e condimenti</option>
+        <option value="Dolci e snack">🍫 Dolci e snack</option>
+        <option value="Frutta secca">🥜 Frutta secca</option>
+        <option value="Farmaci">💊 Farmaci</option>
+        <option value="Altro">📦 Altro</option>
+      </select>
+    </div>
+    <div class="modal-edit-field">
+      <label>Tipo scadenza</label>
+      <select id="edit-tipo">
+        <option value="entro">⛔ Entro il</option>
+        <option value="preferibilmente">💛 Preferibilmente entro</option>
+      </select>
+    </div>
+    <div class="modal-edit-row2">
+      <div class="modal-edit-field">
+        <label>N° pezzi</label>
+        <input type="number" id="edit-qty" placeholder="1" min="1" max="999" />
+      </div>
+      <div class="modal-edit-field">
+        <label>Quantità</label>
+        <input type="number" id="edit-qprod" placeholder="es. 500" min="0" step="any" />
+      </div>
+      <div class="modal-edit-field">
+        <label>Unità</label>
+        <select id="edit-um">
+          <option value="">—</option>
+          <option value="gr">gr</option>
+          <option value="kg">kg</option>
+          <option value="lt">lt</option>
+          <option value="ml">ml</option>
+          <option value="pz">pz</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn-salva" onclick="salvaModifica()"><i class="ti ti-check"></i> Salva modifiche</button>
+    <div class="modal-edit-msg" id="edit-msg"></div>
+  </div>
+</div>
+
+<!-- MODAL PUSH -->
+<div class="modal-overlay" id="push-modal">
+  <div class="modal-box">
+    <div class="modal-icon"><i class="ti ti-bell-ringing"></i></div>
+    <div class="modal-title">Attiva le notifiche</div>
+    <div class="modal-desc">Ricevi un avviso quando un prodotto sta per scadere, anche quando l'app è chiusa. Puoi disattivarle in qualsiasi momento dalle Impostazioni.</div>
+    <div class="modal-btns">
+      <button class="modal-btn-yes" onclick="attivaWebPush()">Attiva notifiche</button>
+      <button class="modal-btn-no" onclick="chiudiPushModal(true)">Non ora</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://lpmepqqraufarqchrbfd.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxwbWVwcXFyYXVmYXJxY2hyYmZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0MjgzOTYsImV4cCI6MjA5NDAwNDM5Nn0.n8WCDkMWCMlC8wVMCA10y-A4Q7Ct-UYJz80_pgMbr4k';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let prodotti = [], filtro = 'tutti', authMode = 'login';
+
+function switchTab(mode) {
+  authMode = mode;
+  document.getElementById('tab-login').classList.toggle('active', mode==='login');
+  document.getElementById('tab-register').classList.toggle('active', mode==='register');
+  document.getElementById('btn-auth-submit').innerHTML = mode==='login' ? 'Accedi <i class="ti ti-arrow-right"></i>' : 'Registrati <i class="ti ti-arrow-right"></i>';
+  document.getElementById('auth-msg').textContent = '';
+  document.getElementById('auth-msg').className = 'auth-msg';
+}
+
+async function handleAuth() {
+  const email=document.getElementById('auth-email').value.trim();
+  const password=document.getElementById('auth-password').value;
+  const msg=document.getElementById('auth-msg');
+  msg.className='auth-msg'; msg.textContent='';
+  if(!email||!password){msg.className='auth-msg error';msg.textContent='Inserisci email e password.';return;}
+  const btn=document.getElementById('btn-auth-submit');
+  btn.innerHTML='<i class="ti ti-loader"></i> Attendere…'; btn.disabled=true;
+  try {
+    let result;
+    if(authMode==='login') result=await sb.auth.signInWithPassword({email,password});
+    else result=await sb.auth.signUp({email,password});
+    if(result.error) throw result.error;
+    if(authMode==='register'){msg.className='auth-msg success';msg.textContent='Registrazione completata! Controlla la email per confermare.';}
+    else await showApp(result.data.user);
+  } catch(err) {
+    msg.className='auth-msg error'; msg.textContent=err.message||'Errore durante l\'accesso.';
+  } finally {
+    btn.innerHTML=authMode==='login'?'Accedi <i class="ti ti-arrow-right"></i>':'Registrati <i class="ti ti-arrow-right"></i>';
+    btn.disabled=false;
+  }
+}
+
+async function handleLogout() {
+  await sb.auth.signOut();
+  document.getElementById('app-screen').style.display='none';
+  document.getElementById('auth-screen').style.display='flex';
+  prodotti=[];
+}
+
+async function showApp(user) {
+  document.getElementById('auth-screen').style.display='none';
+  document.getElementById('app-screen').style.display='block';
+  document.getElementById('user-email-display').textContent=user.email;
+  document.getElementById('sett-email').textContent=user.email;
+  await registraServiceWorker();
+  await caricaProdotti();
+  aggiornaSettingPush();
+  mostraPushModal();
+  await controllaChangelog(); // changelog disabilitato — riabilitare in futuro
+  // se permesso già concesso, salva subscription su Supabase automaticamente
+  if(Notification.permission === 'granted') await sottoscriviPush();
+}
+
+function switchAppTab(tab) {
+  document.querySelectorAll('.nav-tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
+  document.querySelectorAll('.tab-content').forEach(c=>c.classList.toggle('active',c.id==='tab-'+tab));
+  if(tab==='storico') { caricaStorico(); }
+  if(tab==='impostazioni') {
+    aggiornaSettingPush();
+    const toggleTemaEl = document.getElementById('toggle-tema');
+    if(toggleTemaEl) toggleTemaEl.checked = localStorage.getItem('tema') === 'scuro';
+  }
+}
+
+function switchStoricoTab(s) {
+  document.querySelectorAll('.storico-subtab').forEach(b=>b.classList.toggle('active',b.dataset.s===s));
+  document.getElementById('storico-scaduti-pane').style.display = s==='scaduti'?'block':'none';
+  document.getElementById('storico-eliminati-pane').style.display = s==='eliminati'?'block':'none';
+  if(s==='eliminati') caricaEliminati();
+}
+
+async function caricaEliminati() {
+  document.getElementById('eliminati-loading').style.display='block';
+  document.getElementById('eliminati-content').style.display='none';
+  const {data,error} = await sb.from('prodotti_scadenze').select('*').eq('stato','eliminato').order('created_at',{ascending:false});
+  document.getElementById('eliminati-loading').style.display='none';
+  document.getElementById('eliminati-content').style.display='block';
+  if(error){console.error(error);return;}
+  renderEliminati(data||[]);
+}
+
+function renderEliminati(lista) {
+  const cont = document.getElementById('eliminati-lista');
+  const vuoto = document.getElementById('eliminati-vuoto');
+  cont.innerHTML='';
+  if(!lista.length){vuoto.style.display='block';return;}
+  vuoto.style.display='none';
+  lista.forEach(p=>{
+    const d = new Date(p.data_scadenza+'T00:00:00').toLocaleDateString('it-IT',{day:'2-digit',month:'short',year:'numeric'});
+    const eliminatoIl = p.rimosso_il
+      ? new Date(p.rimosso_il).toLocaleDateString('it-IT',{day:'2-digit',month:'short',year:'numeric'})
+      : (p.created_at ? new Date(p.created_at).toLocaleDateString('it-IT',{day:'2-digit',month:'short',year:'numeric'}) : '—');
+    const qtyTxt = qtyLabel(p.quantita, p.quantita_prodotto, p.unita_misura);
+    const card = document.createElement('div');
+    card.className='eliminato-card';
+    card.innerHTML=`
+      <i class="ti ti-trash" style="font-size:18px;color:#444;flex-shrink:0;"></i>
+      <div style="flex:1;min-width:0;">
+        <div class="eliminato-nome">${p.nome}</div>
+        <div class="eliminato-meta">
+          <span class="pill-rimosso"><i class="ti ti-calendar" style="font-size:10px"></i> scad. ${d}</span>
+          ${qtyTxt?`<span class="pill-rimosso"><i class="ti ti-package" style="font-size:10px"></i> ${qtyTxt}</span>`:''}
+          ${p.categoria?`<span class="pill-rimosso">${p.categoria}</span>`:''}
+          <span class="pill-rimosso" style="color:#555;">eliminato il ${eliminatoIl}</span>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">
+        <button class="btn-ripristina" onclick="ripristinaProdotto('${p.id}')"><i class="ti ti-restore"></i> Ripristina</button>
+        <button onclick="eliminaPerSempre('${p.id}','${p.nome.replace(/'/g,"\\'")}')" style="background:none;border:none;cursor:pointer;color:#333;padding:6px;border-radius:8px;font-size:16px;display:flex;align-items:center;" title="Elimina definitivamente"><i class="ti ti-trash"></i></button>
+      </div>`;
+    cont.appendChild(card);
+  });
+}
+
+async function eliminaPerSempre(id, nome) {
+  if(!confirm(`Eliminare definitivamente "${nome}"? Questa azione non può essere annullata.`)) return;
+  const { error } = await sb.from('prodotti_scadenze').delete().eq('id', id);
+  if(error){ console.error(error); return; }
+  const btn = document.querySelector(`[onclick="eliminaPerSempre('${id}','${nome.replace(/'/g,"\\'")}')"]`);
+  if(btn) btn.closest('.eliminato-card').remove();
+  const cont = document.getElementById('eliminati-lista');
+  if(!cont?.children.length) document.getElementById('eliminati-vuoto').style.display='block';
+}
+
+async function ripristinaProdotto(id) {
+  const {data, error} = await sb.from('prodotti_scadenze')
+    .update({stato:'attivo', rimosso_il:null, giorni_scaduto_al_momento:null})
+    .eq('id',id)
+    .select()
+    .single();
+  if(error){console.error(error);return;}
+  // rimuovi dalla lista eliminati e aggiorna UI
+  const card = document.querySelector(`[onclick="ripristinaProdotto('${id}')"]`)?.closest('.eliminato-card');
+  if(card) card.remove();
+  const cont = document.getElementById('eliminati-lista');
+  if(!cont.children.length) document.getElementById('eliminati-vuoto').style.display='block';
+  // aggiungi ai prodotti attivi
+  prodotti.push(data);
+  prodotti.sort((a,b)=>new Date(a.data_scadenza)-new Date(b.data_scadenza));
+}
+
+async function caricaProdotti() {
+  document.getElementById('loading').style.display='block';
+  document.getElementById('lista').innerHTML='';
+  document.getElementById('vuoto').style.display='none';
+  const {data,error}=await sb.from('prodotti_scadenze').select('*').eq('stato','attivo').order('data_scadenza',{ascending:true});
+  document.getElementById('loading').style.display='none';
+  if(error){console.error(error);return;}
+  prodotti=data||[];
+  render();
+  archiviaScaduti14gg();
+}
+
+async function archiviaScaduti14gg() {
+  const oggi=new Date(); oggi.setHours(0,0,0,0);
+  const daArchiviare=prodotti.filter(p=>{const s=new Date(p.data_scadenza);s.setHours(0,0,0,0);return Math.round((oggi-s)/86400000)>14;});
+  for(const p of daArchiviare) await archiviaRimuovi(p.id,true);
+  if(daArchiviare.length) render();
+}
+
+async function aggiungi() {
+  const nome=document.getElementById('inp-nome').value.trim();
+  const data=document.getElementById('inp-data').value;
+  const cat=document.getElementById('inp-cat').value;
+  const qtyVal=document.getElementById('inp-qty').value;
+  const qprodVal=document.getElementById('inp-qprod').value;
+  const umVal=document.getElementById('inp-um').value;
+  const tipoVal=document.getElementById('inp-tipo').value;
+  if(!nome||!data){document.getElementById(nome?'inp-data':'inp-nome').focus();return;}
+  const qty=qtyVal&&parseInt(qtyVal)>0 ? parseInt(qtyVal) : 1;
+  const qprod=qprodVal&&parseFloat(qprodVal)>0 ? parseFloat(qprodVal) : null;
+  const um=umVal||null;
+  const {data:inserted,error}=await sb.from('prodotti_scadenze').insert({nome,data_scadenza:data,categoria:cat,stato:'attivo',quantita:qty,quantita_prodotto:qprod,unita_misura:um,tipo_scadenza:tipoVal}).select().single();
+  if(error){console.error(error);return;}
+  prodotti.push(inserted);
+  prodotti.sort((a,b)=>new Date(a.data_scadenza)-new Date(b.data_scadenza));
+  document.getElementById('inp-nome').value='';
+  document.getElementById('inp-data').value='';
+  document.getElementById('inp-cat').value='Frutta e verdura';
+  document.getElementById('cat-ai-badge').style.display='none';
+  document.getElementById('inp-qty').value='';
+  document.getElementById('inp-qprod').value='';
+  document.getElementById('inp-um').value='';
+  document.getElementById('inp-tipo').value='entro';
+  document.getElementById('inp-nome').focus();
+  render();
+}
+
+async function archiviaRimuovi(id,automatico=false) {
+  const p=prodotti.find(x=>x.id===id);
+  if(!p) return;
+  const oggi=new Date(); oggi.setHours(0,0,0,0);
+  const scad=new Date(p.data_scadenza); scad.setHours(0,0,0,0);
+  const giorniRitardo=Math.round((oggi-scad)/86400000);
+  await sb.from('prodotti_scadenze').update({stato:'scaduto_eliminato',rimosso_il:new Date().toISOString(),giorni_scaduto_al_momento:giorniRitardo}).eq('id',id);
+  prodotti=prodotti.filter(x=>x.id!==id);
+  if(!automatico) render();
+}
+
+async function eliminaDefinitivo(id) {
+  const p = prodotti.find(x=>x.id===id);
+  if(!p) return;
+  if((p.quantita||1) > 1) {
+    apriQtyModal(id, 'elimina');
+  } else {
+    await eseguiEliminaDefinitivo(id, 1);
+  }
+}
+
+async function archiviaRimuovi(id, automatico=false) {
+  const p = prodotti.find(x=>x.id===id);
+  if(!p) return;
+  if(!automatico && (p.quantita||1) > 1) {
+    apriQtyModal(id, 'archivia');
+    return;
+  }
+  await eseguiArchivia(id, p.quantita||1, automatico);
+}
+
+async function eseguiEliminaDefinitivo(id, qty) {
+  const p = prodotti.find(x=>x.id===id);
+  if(!p) return;
+  if(qty >= (p.quantita||1)) {
+    await sb.from('prodotti_scadenze').update({stato:'eliminato'}).eq('id',id);
+    prodotti = prodotti.filter(x=>x.id!==id);
+  } else {
+    await sb.from('prodotti_scadenze').update({quantita: p.quantita - qty}).eq('id',id);
+    p.quantita -= qty;
+  }
+  render();
+}
+
+async function eseguiArchivia(id, qty, automatico=false) {
+  const p = prodotti.find(x=>x.id===id);
+  if(!p) return;
+  const oggi=new Date(); oggi.setHours(0,0,0,0);
+  const scad=new Date(p.data_scadenza); scad.setHours(0,0,0,0);
+  const giorniRitardo=Math.round((oggi-scad)/86400000);
+  if(qty >= (p.quantita||1)) {
+    await sb.from('prodotti_scadenze').update({stato:'scaduto_eliminato',rimosso_il:new Date().toISOString(),giorni_scaduto_al_momento:giorniRitardo}).eq('id',id);
+    prodotti = prodotti.filter(x=>x.id!==id);
+  } else {
+    // archivia una copia con la qty selezionata, decrementa l'originale
+    await sb.from('prodotti_scadenze').insert({
+      nome: p.nome, data_scadenza: p.data_scadenza, categoria: p.categoria,
+      quantita: qty, quantita_prodotto: p.quantita_prodotto, unita_misura: p.unita_misura,
+      stato: 'scaduto_eliminato', rimosso_il: new Date().toISOString(), giorni_scaduto_al_momento: giorniRitardo
+    });
+    await sb.from('prodotti_scadenze').update({quantita: p.quantita - qty}).eq('id',id);
+    p.quantita -= qty;
+  }
+  if(!automatico) render();
+}
+
+// ── MODAL QTY ──
+let qtyModalId = null;
+let qtyModalAzione = null;
+let qtyModalMax = 1;
+let qtyCorrente = 1;
+
+function chiudiQtyModal() {
+  document.getElementById('qty-modal').classList.remove('show');
+  qtyModalId = null;
+}
+
+function cambiaQty(delta) {
+  qtyCorrente = Math.min(qtyModalMax, Math.max(1, qtyCorrente + delta));
+  document.getElementById('qty-val').textContent = qtyCorrente;
+}
+
+function apriQtyModal(id, azione) {
+  const p = prodotti.find(x=>x.id===id);
+  if(!p) return;
+  qtyModalId = id;
+  qtyModalAzione = azione;
+  qtyModalMax = p.quantita||1;
+  qtyCorrente = qtyModalMax;
+  document.getElementById('qty-val').textContent = qtyCorrente;
+  const titoloMap = { elimina: 'Quanti elimini?', archivia: 'Quanti sposti nello storico?', scaduto: 'Quante unità?' };
+  document.getElementById('qty-modal-title').textContent = titoloMap[azione] || 'Quanti?';
+  const etichetta = qtyLabel(qtyModalMax, p.quantita_prodotto, p.unita_misura);
+  document.getElementById('qty-modal-sub').textContent = `"${p.nome}" — hai ${qtyModalMax} pezzi${etichetta?' ('+etichetta+')':''}.`;
+  const confirmMap = { elimina: 'Elimina', archivia: 'Archivia', scaduto: 'Continua' };
+  document.getElementById('btn-qty-confirm').textContent = confirmMap[azione] || 'Conferma';
+  document.getElementById('qty-modal').classList.add('show');
+}
+
+async function confermEliminazione() {
+  const id = qtyModalId;
+  const azione = qtyModalAzione;
+  const qty = qtyCorrente;
+  chiudiQtyModal();
+
+  if(azione === 'elimina') {
+    await eseguiEliminaDefinitivo(id, qty);
+  } else if(azione === 'archivia') {
+    await eseguiArchivia(id, qty);
+  } else if(azione === 'scaduto') {
+    // Dopo aver scelto la quantità, mostra il modal di scelta storico/elimina
+    const p = prodotti.find(x=>x.id===id);
+    if(!p) return;
+    confirmId = id;
+    // Salvo temporaneamente la qty scelta per usarla nella conferma
+    window._pendingQty = qty;
+    document.getElementById('confirm-icon').textContent = '⚠️';
+    document.getElementById('confirm-title').textContent = `"${p.nome}" è scaduto`;
+    document.getElementById('confirm-sub').textContent = qty < (p.quantita||1)
+      ? `Cosa vuoi fare con ${qty} pezzi?`
+      : 'Cosa vuoi fare con questo prodotto?';
+    const btns = document.getElementById('confirm-btns');
+    btns.innerHTML = '';
+    const btnStorico = document.createElement('button');
+    btnStorico.className = 'btn-confirm-storico';
+    btnStorico.innerHTML = '<i class="ti ti-archive"></i> Sposta nello storico scaduti';
+    btnStorico.onclick = () => { chiudiConfirmModal(); eseguiArchivia(id, window._pendingQty); };
+    btns.appendChild(btnStorico);
+    const btnElimina = document.createElement('button');
+    btnElimina.className = 'btn-confirm-elimina';
+    btnElimina.innerHTML = '<i class="ti ti-trash"></i> Elimina definitivamente';
+    btnElimina.onclick = () => { chiudiConfirmModal(); eseguiEliminaDefinitivo(id, window._pendingQty); };
+    btns.appendChild(btnElimina);
+    const btnCancel = document.createElement('button');
+    btnCancel.className = 'btn-confirm-cancel';
+    btnCancel.textContent = 'Annulla';
+    btnCancel.onclick = chiudiConfirmModal;
+    btns.appendChild(btnCancel);
+    document.getElementById('confirm-modal').classList.add('show');
+  }
+}
+
+async function caricaStorico() {
+  document.getElementById('storico-loading').style.display='block';
+  document.getElementById('storico-content').style.display='none';
+  const {data,error}=await sb.from('prodotti_scadenze').select('*').eq('stato','scaduto_eliminato').order('rimosso_il',{ascending:false});
+  document.getElementById('storico-loading').style.display='none';
+  document.getElementById('storico-content').style.display='block';
+  if(error){console.error(error);return;}
+  renderStorico(data||[]);
+}
+
+function renderStorico(lista) {
+  const cont=document.getElementById('storico-lista');
+  const vuoto=document.getElementById('storico-vuoto');
+  const topCont=document.getElementById('top-scaduti');
+  cont.innerHTML=''; topCont.innerHTML='';
+  if(!lista.length){vuoto.style.display='block';return;}
+  vuoto.style.display='none';
+  const conteggio={};
+  lista.forEach(p=>{conteggio[p.nome]=(conteggio[p.nome]||0)+1;});
+  const top=Object.entries(conteggio).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const max=top[0]?top[0][1]:1;
+  top.forEach(([nome,count])=>{
+    const div=document.createElement('div'); div.className='top-card';
+    div.innerHTML=`<div style="flex:1;min-width:0;"><div class="top-nome">${nome}</div><div class="top-bar-wrap"><div class="top-bar" style="width:${Math.round((count/max)*100)}%"></div></div></div><div class="top-count">${count}×</div>`;
+    topCont.appendChild(div);
+  });
+  lista.forEach(p=>{
+    const rimosso=p.rimosso_il?new Date(p.rimosso_il).toLocaleDateString('it-IT',{day:'2-digit',month:'short',year:'numeric'}):'—';
+    const gg=p.giorni_scaduto_al_momento||0;
+    const ritardoClass=gg<=0?'ok':gg<=3?'warn':'bad';
+    const ritardoTxt=gg<=0?'rimosso in tempo':`${gg}gg oltre scadenza`;
+    const qtyTxt=qtyLabel(p.quantita,p.quantita_prodotto,p.unita_misura);
+    const card=document.createElement('div'); card.className='storico-card';
+    card.innerHTML=`
+      <i class="ti ti-archive" style="font-size:18px;color:var(--text-muted);flex-shrink:0;"></i>
+      <div style="flex:1;min-width:0;">
+        <div class="storico-nome">${p.nome}</div>
+        <div class="storico-meta">
+          <span class="pill-rimosso"><i class="ti ti-calendar" style="font-size:10px"></i> ${rimosso}</span>
+          <span class="pill-ritardo ${ritardoClass}">${ritardoTxt}</span>
+          ${qtyTxt?`<span class="pill-rimosso"><i class="ti ti-package" style="font-size:10px"></i> ${qtyTxt}</span>`:''}
+          ${p.categoria?`<span class="pill-rimosso">${p.categoria}</span>`:''}
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0;">
+        <button class="edit-btn" onclick="spostaStoricaInAttivi('${p.id}')" title="Sposta nei prodotti attivi"><i class="ti ti-restore"></i></button>
+        <button class="del-btn" onclick="eliminaDalloStorico('${p.id}')" title="Elimina dallo storico"><i class="ti ti-trash"></i></button>
+      </div>`;
+    cont.appendChild(card);
+  });
+}
+
+function qtyLabel(qty, qprod, um) {
+  const q = qty||1;
+  const parts = [];
+  if(q > 1) parts.push(`${q}×`);
+  if(qprod) parts.push(um ? `${qprod}${um}` : `${qprod}`);
+  else if(um && q === 1) parts.push(um);
+  return parts.join(' ');
+}
+
+function oggi_d(){const d=new Date();d.setHours(0,0,0,0);return d;}
+function giorni(ds){const s=new Date(ds);s.setHours(0,0,0,0);return Math.round((s-oggi_d())/86400000);}
+function stato(g){return g<0?'scaduto':g<=3?'3gg':g<=7?'7gg':'ok';}
+
+function pillHtml(g) {
+  if(g<0) return `<span class="pill pill-scad"><i class="ti ti-alert-circle" style="font-size:11px"></i> scaduto ${Math.abs(g)}g fa</span>`;
+  if(g===0) return `<span class="pill pill-3"><i class="ti ti-clock" style="font-size:11px"></i> scade oggi</span>`;
+  if(g<=3)  return `<span class="pill pill-3"><i class="ti ti-clock" style="font-size:11px"></i> ${g} giorn${g===1?'o':'i'}</span>`;
+  if(g<=7)  return `<span class="pill pill-7"><i class="ti ti-clock" style="font-size:11px"></i> ${g} giorni</span>`;
+  return `<span class="pill pill-ok"><i class="ti ti-check" style="font-size:11px"></i> ${g} giorni</span>`;
+}
+
+function aggiornaStat() {
+  document.getElementById('s-scad').textContent=prodotti.filter(p=>giorni(p.data_scadenza)<0).length;
+  document.getElementById('s-3gg').textContent=prodotti.filter(p=>{const g=giorni(p.data_scadenza);return g>=0&&g<=3;}).length;
+  document.getElementById('s-7gg').textContent=prodotti.filter(p=>{const g=giorni(p.data_scadenza);return g>3&&g<=7;}).length;
+  document.getElementById('s-ok').textContent=prodotti.filter(p=>giorni(p.data_scadenza)>7).length;
+}
+
+function render() {
+  aggiornaStat();
+  let lista=[...prodotti].sort((a,b)=>new Date(a.data_scadenza)-new Date(b.data_scadenza));
+  if(filtro==='scaduti') lista=lista.filter(p=>giorni(p.data_scadenza)<0);
+  else if(filtro==='3gg') lista=lista.filter(p=>{const g=giorni(p.data_scadenza);return g>=0&&g<=3;});
+  else if(filtro==='7gg') lista=lista.filter(p=>{const g=giorni(p.data_scadenza);return g>3&&g<=7;});
+  else if(filtro==='ok')  lista=lista.filter(p=>giorni(p.data_scadenza)>7);
+  if(filtroCat!=='tutti') lista=lista.filter(p=>p.categoria===filtroCat);
+  const cont=document.getElementById('lista'),vuoto=document.getElementById('vuoto');
+  cont.innerHTML='';
+  if(!lista.length){vuoto.style.display='block';return;}
+  vuoto.style.display='none';
+  lista.forEach(p=>{
+    const g=giorni(p.data_scadenza),st=stato(g);
+    const d=new Date(p.data_scadenza+'T00:00:00').toLocaleDateString('it-IT',{day:'2-digit',month:'short',year:'numeric'});
+    const cardCls=st==='scaduto'?'scaduto':st==='3gg'?'urgente3':st==='7gg'?'urgente7':'';
+    const dotCls=st==='scaduto'?'dot-scad':st==='3gg'?'dot-3':st==='7gg'?'dot-7':'dot-ok';
+    const qtyTxt=qtyLabel(p.quantita,p.quantita_prodotto,p.unita_misura);
+    const card=document.createElement('div');
+    card.className=`prod-card ${cardCls}`;
+    card.innerHTML=`
+      <div class="dot ${dotCls}" aria-hidden="true"></div>
+      <div style="flex:1;min-width:0;">
+        <div class="prod-nome">${p.nome}</div>
+        <div class="prod-meta">
+          ${pillHtml(g)}
+          ${p.tipo_scadenza==='preferibilmente'?`<span class="pill pill-pref">💛 pref. entro</span>`:''}
+          ${qtyTxt?`<span class="pill pill-qty"><i class="ti ti-package" style="font-size:11px"></i> ${qtyTxt}</span>`:''}
+          ${p.categoria?`<span class="pill pill-cat">${p.categoria}</span>`:''}
+          <span class="prod-data">${d}</span>
+        </div>
+      </div>
+      <div class="card-actions">
+        <button class="edit-btn" onclick="apriEditModal('${p.id}')" title="Modifica prodotto"><i class="ti ti-pencil"></i></button>
+        <button class="del-btn" onclick="apriConfirmModal('${p.id}')" title="Elimina prodotto"><i class="ti ti-trash"></i></button>
+      </div>`;
+    cont.appendChild(card);
+  });
+  mostraBannerInApp();
+}
+
+let filtroCat = 'tutti';
+
+function setFiltro(f){filtro=f;document.querySelectorAll('.chip').forEach(b=>b.classList.toggle('on',b.dataset.f===f));render();}
+
+// ── MODAL CONFERMA ELIMINAZIONE ──
+let confirmId = null;
+
+function apriConfirmModal(id) {
+  const p = prodotti.find(x=>x.id===id);
+  if(!p) return;
+  confirmId = id;
+  const g = giorni(p.data_scadenza);
+  const scaduto = g < 0;
+  const qty = p.quantita || 1;
+
+  // Se ha più quantità, prima chiede quante poi gestisce l'azione
+  if(qty > 1) {
+    apriQtyModal(id, scaduto ? 'scaduto' : 'elimina');
+    return;
+  }
+
+  // Quantità = 1, mostra modal conferma diretto
+  document.getElementById('confirm-icon').textContent = scaduto ? '⚠️' : '🗑️';
+  document.getElementById('confirm-title').textContent = scaduto ? `"${p.nome}" è scaduto` : `Elimina "${p.nome}"?`;
+  document.getElementById('confirm-sub').textContent = scaduto
+    ? 'Cosa vuoi fare con questo prodotto?'
+    : 'Questa azione non può essere annullata. Il prodotto verrà eliminato definitivamente.';
+
+  const btns = document.getElementById('confirm-btns');
+  btns.innerHTML = '';
+
+  if(scaduto) {
+    const btnStorico = document.createElement('button');
+    btnStorico.className = 'btn-confirm-storico';
+    btnStorico.innerHTML = '<i class="ti ti-archive"></i> Sposta nello storico scaduti';
+    btnStorico.onclick = () => { chiudiConfirmModal(); archiviaRimuovi(id); };
+    btns.appendChild(btnStorico);
+  }
+
+  const btnElimina = document.createElement('button');
+  btnElimina.className = 'btn-confirm-elimina';
+  btnElimina.innerHTML = '<i class="ti ti-trash"></i> Elimina definitivamente';
+  btnElimina.onclick = () => { chiudiConfirmModal(); eseguiEliminaDefinitivo(id, 1); };
+  btns.appendChild(btnElimina);
+
+  const btnCancel = document.createElement('button');
+  btnCancel.className = 'btn-confirm-cancel';
+  btnCancel.textContent = 'Annulla';
+  btnCancel.onclick = chiudiConfirmModal;
+  btns.appendChild(btnCancel);
+
+  document.getElementById('confirm-modal').classList.add('show');
+}
+
+function chiudiConfirmModal() {
+  document.getElementById('confirm-modal').classList.remove('show');
+  confirmId = null;
+}
+
+async function eliminaDalloStorico(id) {
+  const card = document.querySelector(`[onclick="eliminaDalloStorico('${id}')"]`)?.closest('.storico-card');
+  const nome = card?.querySelector('.storico-nome')?.textContent || 'questo prodotto';
+  if(!confirm(`Eliminare definitivamente "${nome}" dallo storico? Questa azione non può essere annullata.`)) return;
+  await sb.from('prodotti_scadenze').update({stato:'eliminato'}).eq('id',id);
+  if(card) card.remove();
+  const cont = document.getElementById('storico-lista');
+  if(!cont?.children.length) document.getElementById('storico-vuoto').style.display='block';
+}
+
+async function spostaStoricaInAttivi(id) {
+  const {data, error} = await sb.from('prodotti_scadenze')
+    .update({stato:'attivo', rimosso_il:null, giorni_scaduto_al_momento:null})
+    .eq('id',id).select().single();
+  if(error){console.error(error);return;}
+  const card = document.querySelector(`[onclick="spostaStoricaInAttivi('${id}')"]`)?.closest('.storico-card');
+  if(card) card.remove();
+  const cont = document.getElementById('storico-lista');
+  if(!cont?.children.length) document.getElementById('storico-vuoto').style.display='block';
+  prodotti.push(data);
+  prodotti.sort((a,b)=>new Date(a.data_scadenza)-new Date(b.data_scadenza));
+  render();
+}
+
+function setFiltroCat(c){filtroCat=c;document.querySelectorAll('.chip-cat').forEach(b=>b.classList.toggle('on',b.dataset.c===c));render();}
+
+// ── AI CATEGORIA ──
+const CATEGORIE = ['Frutta e verdura','Carne','Pesce','Salumi e affettati','Latticini e formaggi','Uova','Legumi e cereali','Pane e pasta','Bibite','Birre e alcolici','Salse e condimenti','Dolci e snack','Frutta secca','Farmaci','Altro'];
+
+const KEYWORDS = {
+  'Frutta e verdura': [
+    'mela','mele','pera','pere','banana','banane','arancia','arance','limone','limoni','mandarino','mandarini','pompelmo','kiwi','fragola','fragole','ciliegia','ciliegie','pesca','pesche','albicocca','albicocche','prugna','prugne','uva','anguria','melone','ananas','mango','papaya','avocado','fico','fichi','melograno','dattero','datteri','lampone','lamponi','mirtillo','mirtilli','mora','more','ribes','maracuja','lychee','cocco','clementina','clementine','nespola','susina','susine',
+    'pomodoro','pomodori','insalata','lattuga','spinaci','zucchina','zucchine','melanzana','melanzane','peperone','peperoni','carota','carote','patata','patate','cipolla','cipolle','aglio','porro','porri','broccolo','broccoli','cavolfiore','cavolo','cavoletti','cavoli','sedano','finocchio','carciofo','carciofi','asparago','asparagi','fagiolino','fagiolini','piselli','mais','cetriolo','cetrioli','ravanello','ravanelli','rucola','basilico','prezzemolo','erba','erbette','bieta','bietola','verza','radicchio','indivia','cicoria','zucca','rape','rapa','barbabietola','topinambur','cime di rapa','puntarelle','pak choi','songino','valeriana'
+  ],
+  'Carne': [
+    'pollo','petto di pollo','coscia','fuso','tacchino','coniglio','maiale','suino','pancetta','coppa','costine','lombata','filetto','manzo','bovino','vitello','vitellone','agnello','agnellone','capretto','cavallo','oca','anatra','piccione','quaglia','cinghiale','cervo','selvaggina','hamburger','polpette','salsiccia','salsicce','wurstel','bistecca','braciola','braciole','fettina','fettine','spezzatino','macinato','carne macinata','carne tritata','arrosto','roast beef','scaloppina','scaloppine','stinco','ossobuco','trippa','frattaglie','fegato','rognone'
+  ],
+  'Pesce': [
+    'salmone','tonno','merluzzo','branzino','orata','spigola','pesce spada','sgombro','aringa','acciuga','acciughe','alice','alici','sardina','sardine','baccalà','stoccafisso','dentice','rombo','sogliola','trota','carpa','anguilla','polpo','polpi','calamaro','calamari','seppia','seppie','gambero','gamberi','scampo','scampi','astice','aragosta','granchio','vongole','cozze','mitili','ostriche','capesante','cannolicchi','telline','lupini','bottarga','pesce','filetto di pesce','frittura di pesce','surimi'
+  ],
+  'Salumi e affettati': [
+    'prosciutto','prosciutto cotto','prosciutto crudo','speck','bresaola','salame','salami','mortadella','coppa','culatello','guanciale','lardo','pancetta','pancetta affumicata','porchetta','nduja','soppressata','chorizo','pepperoni','affettato','affettati','paté','würstel','cotechino','zampone','testa in cassetta','ciccioli'
+  ],
+  'Latticini e formaggi': [
+    'latte','latte intero','latte parzialmente scremato','latte scremato','latte fresco','panna','panna fresca','burro','yogurt','yoghurt','kefir','mozzarella','mozzarella di bufala','fior di latte','ricotta','mascarpone','gorgonzola','parmigiano','grana','grana padano','pecorino','asiago','fontina','taleggio','brie','camembert','emmental','gruyere','edam','gouda','provolone','scamorza','caciotta','primo sale','crescenza','stracchino','robiola','quartirolo','squacquerone','burrata','stracciatella','philadelphia','fiocchi di latte','formaggino','formaggi','formaggio','caciocavallo','ragusano'
+  ],
+  'Uova': [
+    'uova','uovo','uova fresche','uova di gallina','uova di quaglia','uova di anatra','albume','tuorlo','ovetto'
+  ],
+  'Legumi e cereali': [
+    'fagioli','fagiolo','lenticchie','lenticchia','ceci','piselli','fave','soia','azuki','borlotti','cannellini','lupini','cicerchie',
+    'riso','orzo','farro','avena','mais','semola','crusca','quinoa','miglio','amaranto','grano','frumento','bulgur','couscous','polenta','farina','fiocchi','cereali','cereali per la colazione','müesli','corn flakes'
+  ],
+  'Pane e pasta': [
+    'pasta','spaghetti','penne','rigatoni','fusilli','tagliatelle','fettuccine','lasagne','gnocchi','ravioli','tortellini','cappelletti','tagliolini','orecchiette','trofie','strozzapreti','pappardelle','linguine','spaghettoni','vermicelli','mezze maniche','ditalini','stelline','farfalle','conchiglie','ruote','mafalde','pasta fresca','pasta secca','pasta all\'uovo',
+    'pane','panino','panini','baguette','focaccia','ciabatta','rosetta','filone','grissini','crackers','gallette','fette biscottate','piadina','tortilla','wrap','pizza','focaccina','tigella','gnocco fritto'
+  ],
+  'Bibite': [
+    'acqua','succo','succo di frutta','nettare','aranciata','limonata','cola','coca cola','pepsi','fanta','sprite','tè freddo','ice tea','energy drink','red bull','gatorade','bevanda','bibita','sciroppo','spremuta','frullato','smoothie','centrifugato'
+  ],
+  'Birre e alcolici': [
+    'birra','birre','lager','ipa','ale','stout','pilsner','weizen','vino','vino rosso','vino bianco','vino rosato','prosecco','champagne','spumante','lambrusco','grappa','amaro','limoncello','vodka','gin','rum','whisky','whiskey','tequila','brandy','cognac','liquore','aperol','campari','martini','vermouth','porto','marsala','sambuca','digestivo'
+  ],
+  'Salse e condimenti': [
+    'ketchup','maionese','senape','salsa','salsa di pomodoro','passata','polpa di pomodoro','concentrato di pomodoro','pesto','ragù','besciamella','olio','olio d\'oliva','olio evo','aceto','aceto balsamico','soia','salsa di soia','worcestershire','tabasco','sriracha','hummus','guacamole','tapenada','mostarda','miele','marmellata','confettura','nutella','crema spalmabile','burro di arachidi','tahini','curry','dado','brodo','brodo di carne','brodo vegetale','fumetto'
+  ],
+  'Dolci e snack': [
+    'biscotti','biscotto','crostatina','merendina','torta','cake','muffin','cupcake','pandoro','panettone','colomba','cannolo','tiramisù','gelato','ghiacciolo','cioccolato','cioccolata','tavoletta','praline','caramelle','caramella','gomme','chewing gum','patatine','chips','pop corn','popcorn','nachos','cracker dolce','wafer','cialda','cialde','kinder','snack','barretta','cereali','cereali per la colazione','müesli','corn flakes','brioche','cornetto','croissant','bombolone','zeppola','frittella','crostata','cheesecake','budino','panna cotta','mousse'
+  ],
+  'Frutta secca': [
+    'noci','noce','mandorle','mandorla','nocciole','nocciola','pistacchi','pistacchio','anacardi','anacardio','pinoli','pinolo','arachidi','arachide','noci pecan','noci di macadamia','noci di cashew','noci del brasile','semi di girasole','semi di zucca','semi di sesamo','semi di lino','semi di chia','semi di canapa','uvetta','albicocche secche','prugne secche','fichi secchi','datteri secchi','mirtilli secchi','cranberry','cocco essiccato','mix di frutta secca'
+  ],
+  'Farmaci': [
+    'tachipirina','aspirina','ibuprofene','paracetamolo','antibiotico','antibiotic','vitamina','vitamine','integratore','integratori','medicinale','medicina','farmaco','compressa','compresse','capsule','sciroppo','cerotto','pomata','crema farmaceutica','gocce','supposte','vaccino','insulina','cortisone'
+  ]
+};
+
+function classificaCategoria(nome) {
+  if(!nome||nome.length<2) return null;
+  const n = nome.toLowerCase().trim();
+  for(const [cat, keywords] of Object.entries(KEYWORDS)) {
+    for(const kw of keywords) {
+      if(n.includes(kw) || kw.includes(n) && n.length>=4) return cat;
+    }
+  }
+  return null;
+}
+
+const TIPO_DEFAULT_PER_CATEGORIA = {
+  'Frutta e verdura':     'entro',
+  'Carne':                'entro',
+  'Pesce':                'entro',
+  'Salumi e affettati':   'entro',
+  'Latticini e formaggi': 'entro',
+  'Uova':                 'entro',
+  'Legumi e cereali':     'preferibilmente',
+  'Pane e pasta':         'preferibilmente',
+  'Bibite':               'preferibilmente',
+  'Birre e alcolici':     'preferibilmente',
+  'Salse e condimenti':   'preferibilmente',
+  'Dolci e snack':        'preferibilmente',
+  'Frutta secca':         'preferibilmente',
+  'Farmaci':              'entro',
+  'Altro':                'entro'
+};
+
+// parole chiave che forzano "entro" anche dentro categorie preferibilmente
+const FORZA_ENTRO = [
+  'latte','panna','ricotta','mascarpone','mozzarella','burrata','stracciatella',
+  'yogurt','kefir','crescenza','stracchino','robiola','quartirolo','primo sale',
+  'pane','panino','focaccia','brioche','cornetto','pasta fresca','ravioli',
+  'tortellini','cappelletti','gnocchi','pizza','piadina',
+  'succo','succo di frutta','frullato','smoothie','centrifugato',
+  'salsa pronta','besciamella','pesto fresco'
+];
+
+// parole chiave che forzano "preferibilmente" anche dentro categorie entro
+const FORZA_PREF = [
+  'parmigiano','grana','grana padano','pecorino','asiago','fontina','emmental',
+  'gruyere','provolone','caciocavallo','scamorza','gouda','edam','brie','camembert',
+  'salame','salami','prosciutto crudo','speck','bresaola','nduja','soppressata',
+  'aceto','aceto balsamico','olio','miele','marmellata','confettura','nutella',
+  'pasta secca','spaghetti','penne','rigatoni','fusilli','riso','farina',
+  'conserva','sottaceti','sottoli','capperi','olive','tonno in scatola',
+  'sardine in scatola','acciughe sott\'olio'
+];
+
+function classificaTipo(nome, categoria) {
+  const n = nome.toLowerCase().trim();
+  for(const kw of FORZA_ENTRO) { if(n.includes(kw)) return 'entro'; }
+  for(const kw of FORZA_PREF)  { if(n.includes(kw)) return 'preferibilmente'; }
+  return TIPO_DEFAULT_PER_CATEGORIA[categoria] || 'entro';
+}
+
+function suggerisciCategoria(nome) {
+  if(!nome||nome.length<2) return;
+  const badge = document.getElementById('cat-ai-badge');
+  const cat = classificaCategoria(nome);
+  if(cat) {
+    document.getElementById('inp-cat').value = cat;
+    document.getElementById('inp-tipo').value = classificaTipo(nome, cat);
+    badge.style.display='inline'; badge.textContent='✦ auto';
+  } else {
+    // anche senza categoria riconosciuta, prova a classificare il tipo
+    const catAttuale = document.getElementById('inp-cat').value;
+    document.getElementById('inp-tipo').value = classificaTipo(nome, catAttuale);
+    badge.style.display='none';
+  }
+}
+
+// ── NOTIFICA 3: IN-APP BANNER ──
+async function chiudiBanner(id) {
+  const oggi = new Date().toISOString().split('T')[0];
+  await sb.from('prodotti_scadenze').update({banner_chiuso_il: oggi}).eq('id', id);
+  const p = prodotti.find(x=>x.id===id);
+  if(p) p.banner_chiuso_il = oggi;
+  const el = document.getElementById('banner-row-'+id);
+  if(el) el.remove();
+  aggiornaVisibilitaBanner();
+}
+
+function bannerChiusoOggi(p) {
+  if(!p.banner_chiuso_il) return false;
+  const oggi = new Date().toISOString().split('T')[0];
+  return p.banner_chiuso_il === oggi;
+}
+
+function mostraBannerInApp() {
+  const scaduti = prodotti.filter(p => giorni(p.data_scadenza) < 0 && !bannerChiusoOggi(p));
+  const urgenti = prodotti.filter(p => { const g=giorni(p.data_scadenza); return g>=0&&g<=3&&!bannerChiusoOggi(p); });
+  const banner = document.getElementById('notifica-banner');
+  banner.innerHTML = '';
+  if(!scaduti.length && !urgenti.length) { banner.style.display='none'; return; }
+  banner.style.display='block';
+
+  scaduti.forEach(p => {
+    const row = document.createElement('div');
+    row.className='notif-row scaduti';
+    row.id='banner-row-'+p.id;
+    row.innerHTML=`
+      <i class="ti ti-alert-circle"></i>
+      <div class="notif-testo"><strong>${p.nome}</strong> è scaduto${giorni(p.data_scadenza)<-1?' '+Math.abs(giorni(p.data_scadenza))+'gg fa':''}. Spostalo nello storico o eliminalo.</div>
+      <button class="notif-close" onclick="chiudiBanner('${p.id}')"><i class="ti ti-x"></i></button>`;
+    banner.appendChild(row);
+  });
+
+  urgenti.forEach(p => {
+    const g = giorni(p.data_scadenza);
+    const row = document.createElement('div');
+    row.className='notif-row urgenti';
+    row.id='banner-row-'+p.id;
+    row.innerHTML=`
+      <i class="ti ti-clock-exclamation"></i>
+      <div class="notif-testo"><strong>${p.nome}</strong> scade ${g===0?'oggi':'tra '+g+' giorn'+(g===1?'o':'i')}.</div>
+      <button class="notif-close" onclick="chiudiBanner('${p.id}')"><i class="ti ti-x"></i></button>`;
+    banner.appendChild(row);
+  });
+}
+
+function aggiornaVisibilitaBanner() {
+  const banner = document.getElementById('notifica-banner');
+  if(!banner.querySelector('.notif-row')) banner.style.display='none';
+}
+
+// ── NOTIFICA 1: WEB PUSH ──
+const VAPID_PUBLIC_KEY = 'BDlEQ4A4GKolJEzZerD05IhSMCeDBMXOrb3PMqOrkeuIVsExTKf0O3f5lzKn_w48I_MU5gKPMQMvXE4Rq3DcQNM';
+
+let swRegistration = null;
+
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding)
+    .replace(/\-/g, '+')
+    .replace(/_/g, '/');
+  const rawData = atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for(let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
+
+async function registraServiceWorker() {
+  if(!('serviceWorker' in navigator) || !('Notification' in window)) return;
+  try {
+    swRegistration = await navigator.serviceWorker.register('/sw.js', {scope:'/'});
+    await navigator.serviceWorker.ready;
+  } catch(e) { console.warn('SW non registrato:', e); }
+}
+
+async function salvaSubscription(subscription) {
+  try {
+    const { data: { user } } = await sb.auth.getUser();
+    if(!user) return;
+    const { error } = await sb.from('push_subscriptions').upsert({
+      user_id: user.id,
+      subscription: subscription.toJSON()
+    }, { onConflict: 'user_id' });
+    if(error) console.error('Errore salvataggio subscription:', error);
+  } catch(e) { console.error('Errore subscription:', e); }
+}
+
+async function rimuoviSubscription() {
+  try {
+    const { data: { user } } = await sb.auth.getUser();
+    if(swRegistration) {
+      const sub = await swRegistration.pushManager.getSubscription();
+      if(sub) await sub.unsubscribe();
+    }
+    if(user) await sb.from('push_subscriptions').delete().eq('user_id', user.id);
+  } catch(e) { console.error('Errore rimozione subscription:', e); }
+}
+
+async function attivaWebPush() {
+  chiudiPushModal(false);
+  if(!('Notification' in window)){alert('Il tuo browser non supporta le notifiche.');return;}
+  const perm = await Notification.requestPermission();
+  if(perm==='granted') {
+    localStorage.setItem('push_attivato','1');
+    localStorage.removeItem('push_rifiutato');
+    await sottoscriviPush();
+    aggiornaSettingPush();
+  } else {
+    localStorage.removeItem('push_attivato');
+    aggiornaSettingPush();
+  }
+}
+
+async function sottoscriviPush() {
+  try {
+    if(!swRegistration) await registraServiceWorker();
+    if(!swRegistration) return;
+    await navigator.serviceWorker.ready;
+    let sub = await swRegistration.pushManager.getSubscription();
+    if(!sub) {
+      sub = await swRegistration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+      });
+    }
+    await salvaSubscription(sub);
+  } catch(e) { console.error('Errore sottoscriviPush:', e); }
+}
+
+function chiudiPushModal(ricorda) {
+  document.getElementById('push-modal').classList.remove('show');
+  if(ricorda) localStorage.setItem('push_rifiutato','1');
+}
+
+function mostraPushModal() {
+  if(!('Notification' in window)) return;
+  if(Notification.permission==='granted') {
+    localStorage.setItem('push_attivato','1');
+    aggiornaSettingPush();
+    return;
+  }
+  if(Notification.permission==='denied') return;
+  if(localStorage.getItem('push_rifiutato')) return;
+  if(localStorage.getItem('push_attivato')) return;
+  setTimeout(()=>document.getElementById('push-modal').classList.add('show'), 1500);
+}
+
+async function togglePushSetting(checked) {
+  if(checked) {
+    if(Notification.permission==='granted') {
+      localStorage.setItem('push_attivato','1');
+      await sottoscriviPush();
+    } else if(Notification.permission==='denied') {
+      document.getElementById('toggle-push').checked=false;
+      alert('Le notifiche sono bloccate dal browser. Abilitale nelle impostazioni del browser e ricarica la pagina.');
+    } else {
+      const perm = await Notification.requestPermission();
+      if(perm==='granted') {
+        localStorage.setItem('push_attivato','1');
+        await sottoscriviPush();
+      } else {
+        document.getElementById('toggle-push').checked=false;
+      }
+    }
+  } else {
+    localStorage.removeItem('push_attivato');
+    await rimuoviSubscription();
+  }
+  aggiornaSettingPush();
+}
+
+async function salvaOrarioNotifica(orario) {
+  const { data: { user } } = await sb.auth.getUser();
+  if(!user) return;
+  await sb.from('user_settings').upsert(
+    { user_id: user.id, orario_notifica: orario },
+    { onConflict: 'user_id' }
+  );
+}
+
+async function salvaPreferenzaNotifica(campo, valore) {
+  const { data: { user } } = await sb.auth.getUser();
+  if(!user) return;
+  await sb.from('user_settings').upsert(
+    { user_id: user.id, [campo]: valore },
+    { onConflict: 'user_id' }
+  );
+}
+
+async function caricaOrarioNotifica() {
+  const { data: { user } } = await sb.auth.getUser();
+  if(!user) return;
+  const { data } = await sb.from('user_settings')
+    .select('orario_notifica, notifica_stile, notifica_soglia')
+    .eq('user_id', user.id)
+    .single();
+  const sel = document.getElementById('sel-orario');
+  if(sel) sel.value = data?.orario_notifica || '08:00';
+  const selStile = document.getElementById('sel-stile');
+  if(selStile) selStile.value = data?.notifica_stile || 'breve';
+  const selSoglia = document.getElementById('sel-soglia');
+  if(selSoglia) selSoglia.value = String(data?.notifica_soglia ?? 3);
+}
+
+// ── TEMA ──
+function applicaTema(scuro) {
+  document.body.classList.toggle('tema-chiaro', !scuro);
+  const toggle = document.getElementById('toggle-tema');
+  if(toggle) toggle.checked = scuro;
+  localStorage.setItem('tema', scuro ? 'scuro' : 'chiaro');
+}
+
+function toggleTema(scuro) {
+  applicaTema(scuro);
+}
+
+// Applica tema salvato subito al caricamento
+(function() {
+  const tema = localStorage.getItem('tema');
+  if(tema === null || tema === 'chiaro') {
+    document.body.classList.add('tema-chiaro');
+  }
+})();
+
+function aggiornaSettingPush() {
+  const attivato  = !!localStorage.getItem('push_attivato');
+  const toggle    = document.getElementById('toggle-push');
+  const statusRow = document.getElementById('push-status-row');
+  const statusDesc  = document.getElementById('push-status-desc');
+  const statusBadge = document.getElementById('push-status-badge');
+  const orarioRow = document.getElementById('orario-row');
+  if(toggle) toggle.checked = attivato;
+  if(!('Notification' in window)) {
+    if(statusRow) statusRow.style.display='flex';
+    if(statusDesc) statusDesc.textContent='Il tuo browser non supporta le notifiche.';
+    if(statusBadge){ statusBadge.textContent='Non supportato'; statusBadge.className='sett-badge off'; }
+    if(orarioRow) orarioRow.style.display='none';
+    return;
+  }
+  if(statusRow) statusRow.style.display='flex';
+  const perm = Notification.permission;
+  if(perm==='granted' && attivato) {
+    if(statusDesc) statusDesc.textContent='Le notifiche sono attive. Riceverai un avviso ogni giorno all\'orario scelto.';
+    if(statusBadge){ statusBadge.textContent='Attive'; statusBadge.className='sett-badge on'; }
+    if(orarioRow) { orarioRow.style.display='flex'; caricaOrarioNotifica(); }
+    const stileRow = document.getElementById('stile-row');
+    const sogliaRow = document.getElementById('soglia-row');
+    if(stileRow) stileRow.style.display='flex';
+    if(sogliaRow) sogliaRow.style.display='flex';
+  } else if(perm==='denied') {
+    if(statusDesc) statusDesc.textContent='Le notifiche sono bloccate dal browser. Abilitale nelle impostazioni del browser.';
+    if(statusBadge){ statusBadge.textContent='Bloccate'; statusBadge.className='sett-badge off'; }
+    if(orarioRow) orarioRow.style.display='none';
+    const stileRow = document.getElementById('stile-row');
+    const sogliaRow = document.getElementById('soglia-row');
+    if(stileRow) stileRow.style.display='none';
+    if(sogliaRow) sogliaRow.style.display='none';
+  } else {
+    if(statusDesc) statusDesc.textContent='Le notifiche non sono ancora state attivate.';
+    if(statusBadge){ statusBadge.textContent='Disattive'; statusBadge.className='sett-badge off'; }
+    if(orarioRow) orarioRow.style.display='none';
+    const stileRow = document.getElementById('stile-row');
+    const sogliaRow = document.getElementById('soglia-row');
+    if(stileRow) stileRow.style.display='none';
+    if(sogliaRow) sogliaRow.style.display='none';
+  }
+}
+
+// ── CHANGELOG ──
+const VERSIONE_ATTUALE = '1.0';
+
+const CHANGELOG = [
+  {
+    v: '1.0',
+    data: 'Giugno 2025',
+    novita: [
+      { icon: '🎉', titolo: 'Benvenuto in SalvaSpreco!', desc: 'Tieni traccia delle scadenze dei tuoi prodotti, ricevi notifiche giornaliere e consulta lo storico di ciò che è scaduto.' },
+    ]
+  }
+];
+
+async function caricaVersioneVista() {
+  const { data: { user } } = await sb.auth.getUser();
+  if(!user) return '0';
+  const { data } = await sb.from('user_settings')
+    .select('versione_vista')
+    .eq('user_id', user.id)
+    .single();
+  return data?.versione_vista || '0';
+}
+
+async function salvaVersioneVista() {
+  const { data: { user } } = await sb.auth.getUser();
+  if(!user) return;
+  await sb.from('user_settings').upsert(
+    { user_id: user.id, versione_vista: VERSIONE_ATTUALE },
+    { onConflict: 'user_id' }
+  );
+}
+
+async function controllaChangelog() {
+  const vistaDa = await caricaVersioneVista();
+  if(vistaDa === VERSIONE_ATTUALE) return;
+
+  // raccogli tutte le versioni nuove in ordine cronologico (dalla più vecchia)
+  const versioni = CHANGELOG.filter(c => c.v > vistaDa).reverse();
+  if(!versioni.length) { await salvaVersioneVista(); return; }
+
+  const totNovita = versioni.reduce((s,v)=>s+v.novita.length, 0);
+  document.getElementById('changelog-sub-text').textContent =
+    `${totNovita} nuov${totNovita===1?'à':'ità'} dall\'ultima volta che hai aperto l\'app`;
+
+  const cont = document.getElementById('changelog-content');
+  cont.innerHTML = '';
+  versioni.forEach(ver => {
+    const div = document.createElement('div');
+    div.className = 'changelog-version';
+    div.innerHTML = `
+      <div class="changelog-v-header">
+        <span class="changelog-v-badge">v${ver.v}</span>
+        <span class="changelog-v-date">${ver.data}</span>
+      </div>
+      ${ver.novita.map(n=>`
+        <div class="changelog-item">
+          <div class="changelog-item-icon">${n.icon}</div>
+          <div class="changelog-item-text">
+            <div class="changelog-item-title">${n.titolo}</div>
+            <div class="changelog-item-desc">${n.desc}</div>
+          </div>
+        </div>`).join('')}`;
+    cont.appendChild(div);
+  });
+
+  document.getElementById('changelog-modal').classList.add('show');
+}
+
+async function chiudiChangelog() {
+  document.getElementById('changelog-modal').classList.remove('show');
+  await salvaVersioneVista();
+}
+let editingId = null;
+
+function apriEditModal(id) {
+  const p = prodotti.find(x=>x.id===id);
+  if(!p) return;
+  editingId = id;
+  document.getElementById('edit-nome').value = p.nome || '';
+  document.getElementById('edit-data').value = p.data_scadenza || '';
+  document.getElementById('edit-cat').value = p.categoria || 'Altro';
+  document.getElementById('edit-qty').value = p.quantita > 1 ? p.quantita : '';
+  document.getElementById('edit-qprod').value = p.quantita_prodotto || '';
+  document.getElementById('edit-um').value = p.unita_misura || '';
+  document.getElementById('edit-tipo').value = p.tipo_scadenza || 'entro';
+  document.getElementById('edit-msg').textContent = '';
+  document.getElementById('edit-modal').classList.add('show');
+}
+
+function chiudiEditModal() {
+  document.getElementById('edit-modal').classList.remove('show');
+  editingId = null;
+}
+
+async function salvaModifica() {
+  const nome = document.getElementById('edit-nome').value.trim();
+  const data = document.getElementById('edit-data').value;
+  const cat  = document.getElementById('edit-cat').value;
+  const qtyVal = document.getElementById('edit-qty').value;
+  const qprodVal = document.getElementById('edit-qprod').value;
+  const um = document.getElementById('edit-um').value || null;
+  const msg = document.getElementById('edit-msg');
+
+  const tipo = document.getElementById('edit-tipo').value;
+
+  if(!nome||!data) { msg.style.color='#f09595'; msg.textContent='Nome e data sono obbligatori.'; return; }
+
+  const qty = qtyVal && parseInt(qtyVal)>0 ? parseInt(qtyVal) : 1;
+  const qprod = qprodVal && parseFloat(qprodVal)>0 ? parseFloat(qprodVal) : null;
+
+  const { error } = await sb.from('prodotti_scadenze').update({
+    nome, data_scadenza: data, categoria: cat,
+    quantita: qty, quantita_prodotto: qprod, unita_misura: um, tipo_scadenza: tipo
+  }).eq('id', editingId);
+
+  if(error) { msg.style.color='#f09595'; msg.textContent='Errore nel salvataggio.'; return; }
+
+  const idx = prodotti.findIndex(x=>x.id===editingId);
+  if(idx>=0) Object.assign(prodotti[idx], {nome, data_scadenza:data, categoria:cat, quantita:qty, quantita_prodotto:qprod, unita_misura:um, tipo_scadenza:tipo});
+  prodotti.sort((a,b)=>new Date(a.data_scadenza)-new Date(b.data_scadenza));
+
+  msg.style.color='#5DCAA5'; msg.textContent='Salvato!';
+  setTimeout(()=>{ chiudiEditModal(); render(); }, 700);
+}
+
+// chiudi modal cliccando fuori
+document.getElementById('confirm-modal').addEventListener('click', e => {
+  if(e.target === document.getElementById('confirm-modal')) chiudiConfirmModal();
+});
+document.getElementById('qty-modal').addEventListener('click', e => {
+  if(e.target === document.getElementById('qty-modal')) chiudiQtyModal();
+});
+document.getElementById('edit-modal').addEventListener('click', e => {
+  if(e.target === document.getElementById('edit-modal')) chiudiEditModal();
+});
+document.getElementById('push-modal').addEventListener('click', e => {
+  if(e.target === document.getElementById('push-modal')) chiudiPushModal(false);
+});
+document.getElementById('auth-password').addEventListener('keydown',e=>{if(e.key==='Enter')handleAuth();});
+document.getElementById('inp-nome').addEventListener('blur', e => {
+  const v = e.target.value.trim();
+  if(v.length>=2) suggerisciCategoria(v);
+});
+document.getElementById('inp-nome').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('inp-data').focus();});
+document.getElementById('inp-data').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('inp-qty').focus();});
+document.getElementById('inp-qty').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('inp-qprod').focus();});
+document.getElementById('inp-qprod').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('inp-um').focus();});
+document.getElementById('inp-um').addEventListener('keydown',e=>{if(e.key==='Enter')aggiungi();});
+
+(async()=>{
+  const {data:{session}}=await sb.auth.getSession();
+  if(session) await showApp(session.user);
+})();
+</script>
+</body>
+</html>
